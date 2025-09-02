@@ -13,6 +13,8 @@ import (
 )
 
 func RegisterV1(router *gin.Engine) {
+	RegisterSeo(router)
+
 	v1 := router.Group("/v1")
 	{
 		v1.GET("/ping", func(c *gin.Context) {
@@ -27,8 +29,10 @@ func RegisterV1(router *gin.Engine) {
 		services.Init()
 
 		registerAuth(v1)
+		registerTag(v1)
 		v1.Use(middlewares.TokenAuthMiddleware())
 		registerUser(v1)
 
 	}
+
 }

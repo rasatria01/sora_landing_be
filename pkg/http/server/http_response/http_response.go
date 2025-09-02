@@ -9,10 +9,10 @@ import (
 )
 
 type Response struct {
-	Status  int         `json:"status"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
-	Error   interface{} `json:"error"`
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+	Data    any    `json:"data"`
+	Error   any    `json:"error"`
 }
 
 func SendSuccess(c *gin.Context, status int, message string, data any) {
@@ -42,4 +42,9 @@ func SendError(c *gin.Context, err error) {
 	if err != nil {
 		c.Abort()
 	}
+}
+
+func SendRaw(c *gin.Context, status int, contentType string, body string) {
+	c.Header("Content-Type", contentType)
+	c.String(status, body)
 }

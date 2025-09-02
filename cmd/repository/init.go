@@ -11,6 +11,7 @@ var RepoPool *PoolRepository
 type PoolRepository struct {
 	UserRepository           UserRepository
 	AuthenticationRepository AuthRepository
+	TagRepository            TagRepository
 }
 
 func Init(db *database.Database) {
@@ -18,6 +19,7 @@ func Init(db *database.Database) {
 		RepoPool = &PoolRepository{
 			UserRepository:           NewUserRepository(db),
 			AuthenticationRepository: NewAuthRepository(db),
+			TagRepository:            NewTagRepository(db),
 		}
 	})
 }

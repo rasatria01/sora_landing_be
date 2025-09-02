@@ -11,6 +11,7 @@ var ServicePool *PoolService
 type PoolService struct {
 	AuthService AuthService
 	UserService UserService
+	TagService  TagService
 }
 
 func Init() {
@@ -22,6 +23,7 @@ func Init() {
 				repo.UserRepository,
 				repo.AuthenticationRepository,
 			),
+			TagService: NewTagService(repo.TagRepository),
 		}
 	})
 }
