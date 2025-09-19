@@ -1,0 +1,104 @@
+package response
+
+import (
+	"sora_landing_be/cmd/domain"
+	"time"
+)
+
+// PublicArticleList is a simplified version of article for list views
+type PublicArticleList struct {
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Slug        string    `json:"slug"`
+	Excerpt     string    `json:"excerpt"`
+	ImageURL    string    `json:"image_url"`
+	Views       int64     `json:"views"`
+	PublishedAt time.Time `json:"published_at"`
+
+	// Simplified related data
+	Category CategoryResponse    `json:"category"`
+	Author   *PublicAuthorDetail `json:"author"`
+	Tags     []Tag               `json:"tags"`
+}
+
+// PublicArticleDetail is the full article view for public
+type PublicArticleDetail struct {
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Slug        string    `json:"slug"`
+	Content     string    `json:"content"`
+	Excerpt     string    `json:"excerpt"`
+	ImageURL    string    `json:"image_url"`
+	Views       int64     `json:"views"`
+	PublishedAt time.Time `json:"published_at"`
+
+	// Related data
+	Category CategoryResponse    `json:"category"`
+	Author   *PublicAuthorDetail `json:"author"`
+	Tags     []Tag               `json:"tags"`
+
+	// Related articles
+	RelatedArticles []PublicArticleList `json:"related_articles"`
+}
+
+// PublicAuthorDetail contains non-sensitive author information
+type PublicAuthorDetail struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Username string `json:"username"`
+}
+
+func (p *PublicArticleList) FromDomain(article *domain.BlogArtikel) {
+	p.ID = article.ID
+	p.Title = article.Title
+	p.Slug = article.Slug
+	p.Excerpt = article.Excerpt
+	p.ImageURL = article.ImageURL
+	p.Views = article.Views
+	p.PublishedAt = article.PublishedAt
+
+	if article.Category != nil {
+		p.Category = ToCategoryResponse(*article.Category)
+	}
+	if article.Author != nil {
+		p.Author = &PublicAuthorDetail{
+			ID:   article.Author.ID,
+			Name: article.Author.Name,
+		}
+	}
+	if len(article.Tags) > 0 {
+		p.Tags = NewListTag(article.Tags)
+	}
+}
+
+func (p *PublicArticleDetail) FromDomain(article *domain.BlogArtikel, relatedArticles []domain.BlogArtikel) {
+	p.ID = article.ID
+	p.Title = article.Title
+	p.Slug = article.Slug
+	p.Content = article.Content
+	p.Excerpt = article.Excerpt
+	p.ImageURL = article.ImageURL
+	p.Views = article.Views
+	p.PublishedAt = article.PublishedAt
+
+	if article.Category != nil {
+		p.Category = ToCategoryResponse(*article.Category)
+	}
+	if article.Author != nil {
+		p.Author = &PublicAuthorDetail{
+			ID:   article.Author.ID,
+			Name: article.Author.Name,
+		}
+	}
+	if len(article.Tags) > 0 {
+		p.Tags = NewListTag(article.Tags)
+	}
+
+	// Convert related articles
+	if len(relatedArticles) > 0 {
+		p.RelatedArticles = make([]PublicArticleList, len(relatedArticles))
+		for i, rel := range relatedArticles {
+			p.RelatedArticles[i].FromDomain(&rel)
+		}
+	}
+}

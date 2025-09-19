@@ -9,9 +9,11 @@ var once = &sync.Once{}
 var ServicePool *PoolService
 
 type PoolService struct {
-	AuthService AuthService
-	UserService UserService
-	TagService  TagService
+	AuthService     AuthService
+	UserService     UserService
+	TagService      TagService
+	CategoryService CategoryService
+	BlogService     BlogService
 }
 
 func Init() {
@@ -23,7 +25,9 @@ func Init() {
 				repo.UserRepository,
 				repo.AuthenticationRepository,
 			),
-			TagService: NewTagService(repo.TagRepository),
+			TagService:      NewTagService(repo.TagRepository),
+			CategoryService: NewCatService(repo.CategoryRepository),
+			BlogService:     NewBlogService(repo.BlogRepository, repo.TagRepository),
 		}
 	})
 }
