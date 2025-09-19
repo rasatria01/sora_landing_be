@@ -12,6 +12,8 @@ type PoolRepository struct {
 	UserRepository           UserRepository
 	AuthenticationRepository AuthRepository
 	TagRepository            TagRepository
+	CategoryRepository       CategoryRepository
+	BlogRepository           BlogRepository
 }
 
 func Init(db *database.Database) {
@@ -20,6 +22,8 @@ func Init(db *database.Database) {
 			UserRepository:           NewUserRepository(db),
 			AuthenticationRepository: NewAuthRepository(db),
 			TagRepository:            NewTagRepository(db),
+			CategoryRepository:       NewCatRepository(db),
+			BlogRepository:           NewBlogRepository(db),
 		}
 	})
 }

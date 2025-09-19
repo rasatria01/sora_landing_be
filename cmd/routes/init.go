@@ -31,7 +31,9 @@ func RegisterV1(router *gin.Engine) {
 		registerAuth(v1)
 		registerTag(v1)
 		v1.Use(middlewares.TokenAuthMiddleware())
+		registerCategory(v1)
 		registerUser(v1)
+		registerBlog(v1)
 
 	}
 

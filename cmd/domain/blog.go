@@ -23,5 +23,5 @@ type BlogArtikel struct {
 	Status      constants.ArticleStatus `bun:",notnull,default:'draft'"` // draft, published, archived
 	Views       int64                   `bun:",default:0"`
 	PublishedAt time.Time               `bun:",nullzero"`
-	Tags        []Tag                   `bun:"m2m:article_tags,join:BlogArticle=Tag"`
+	Tags        []Tag                   `bun:"m2m:article_tags,join:Article=Tag"`
 }

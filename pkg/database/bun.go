@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"sora_landing_be/cmd/domain"
 	"sora_landing_be/pkg/config"
 	"sora_landing_be/pkg/logger"
 	"sync"
@@ -37,6 +38,7 @@ func InitDB(c config.Database) {
 
 		instance := bun.NewDB(sqlDB, pgdialect.New())
 		dbInstance.DB = instance
+		dbInstance.RegisterModel((*domain.ArticleTag)(nil))
 		dbInstance.SetMaxIdleConns(c.MaxOpenIdleConn)
 		dbInstance.SetMaxOpenConns(c.MaxOpenConn)
 		dbInstance.SetConnMaxIdleTime(c.MaxIdleConn)

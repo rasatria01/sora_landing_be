@@ -14,8 +14,8 @@ type (
 	}
 )
 
-func (c *Category) ToDomain(slug string) *domain.Category {
-	return &domain.Category{
+func (c *Category) ToDomain(slug string) domain.Category {
+	return domain.Category{
 		Name: c.Name,
 		Slug: slug,
 	}

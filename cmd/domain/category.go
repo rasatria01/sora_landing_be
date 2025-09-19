@@ -5,7 +5,7 @@ import (
 )
 
 type Category struct {
-	bun.BaseModel `bun:"table:categories,alias:c"`
+	bun.BaseModel `bun:"table:categories"`
 	BaseEntity
 
 	Name string `bun:",unique,notnull"`
