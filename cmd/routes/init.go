@@ -28,10 +28,17 @@ func RegisterV1(router *gin.Engine) {
 		repository.Init(database.GetDB())
 		services.Init()
 
+		public := v1.Group("public")
+		{
+			registerPublic(public)
+		}
+
 		registerAuth(v1)
 		registerTag(v1)
 		v1.Use(middlewares.TokenAuthMiddleware())
+		registerDemo(v1)
 		registerCategory(v1)
+		RegisterFileRoutes(v1)
 		registerUser(v1)
 		registerBlog(v1)
 
