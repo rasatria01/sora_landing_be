@@ -216,7 +216,7 @@ func (ctl *BlogController) ListPublicArticles(ctx *gin.Context) {
 }
 
 func (ctl *BlogController) GetPublicArticleBySlug(ctx *gin.Context) {
-	slug, err := internalHTTP.BindParams[string](ctx, "slug")
+	slug, err := internalHTTP.BindParams[string](ctx, "id")
 	if err != nil {
 		http_response.SendError(ctx, errors.ValidationErrorToAppError(err))
 		return

@@ -100,7 +100,7 @@ func (r *blogRepository) GetArticle(ctx context.Context, id string) (res domain.
 		Relation("Category").
 		Relation("Author").
 		Relation("Tags").
-		Where(`"blog_artikels"."id" = ?`, id).
+		Where(`"ba"."id" = ?`, id).
 		Scan(ctx)
 	return res, err
 }
@@ -112,7 +112,7 @@ func (r *blogRepository) GetArticleBySlug(ctx context.Context, slug string) (res
 		Relation("Category").
 		Relation("Author").
 		Relation("Tags").
-		Where(`"blog_artikels"."slug" = ?`, slug).
+		Where(`"ba"."slug" = ?`, slug).
 		Scan(ctx)
 	return res, err
 }
@@ -275,20 +275,20 @@ func (r *blogRepository) ListPublicArticles(ctx context.Context, req requests.Li
 		Relation("Category").
 		Relation("Author").
 		Relation("Tags").
-		Where("status = ?", constants.StatusPublished).
-		Where("deleted_at IS NULL").
-		Where("published_at <= ?", time.Now())
+		Where("ba.status = ?", constants.StatusPublished).
+		Where("ba.deleted_at IS NULL").
+		Where("ba.published_at <= ?", time.Now())
 
 	// Apply filters
 	if req.CategoryID != "" {
-		q.Where("category_id = ?", req.CategoryID)
+		q.Where("ba.category_id = ?", req.CategoryID)
 	}
 	if req.TagID != "" {
 		q.Join("JOIN article_tags at ON at.blog_article_id = blog_artikels.id").
 			Where("at.tag_id = ?", req.TagID)
 	}
 	if req.Search != "" {
-		q.Where("title ILIKE ? OR content ILIKE ?",
+		q.Where("ba.title ILIKE ? OR ba.content ILIKE ?",
 			fmt.Sprintf("%%%s%%", req.Search),
 			fmt.Sprintf("%%%s%%", req.Search))
 	}
@@ -320,10 +320,8 @@ func (r *blogRepository) GetPublicArticleWithRelated(ctx context.Context, slug s
 		Relation("Category").
 		Relation("Author").
 		Relation("Tags").
-		Where(`"blog_artikels"."slug" = ?`, slug).
-		Where("status = ?", constants.StatusPublished).
-		Where("deleted_at IS NULL").
-		Where("published_at <= ?", time.Now()).
+		Where(`"ba"."slug" = ?`, slug).
+		Where("ba.status = ?", constants.StatusPublished).
 		Scan(ctx)
 	if err != nil {
 		return article, nil, err
@@ -339,7 +337,7 @@ func (r *blogRepository) GetPublicArticleWithRelated(ctx context.Context, slug s
 		for i, tag := range article.Tags {
 			tagIDs[i] = tag.ID
 		}
-		tagConditions = append(tagConditions, "EXISTS (SELECT 1 FROM article_tags at WHERE at.blog_article_id = blog_artikels.id AND at.tag_id IN (?))")
+		tagConditions = append(tagConditions, "EXISTS (SELECT 1 FROM article_tags at WHERE at.blog_article_id = ba.id AND at.tag_id IN (?))")
 		params = append(params, tagIDs)
 	}
 
@@ -350,10 +348,10 @@ func (r *blogRepository) GetPublicArticleWithRelated(ctx context.Context, slug s
 		Relation("Category").
 		Relation("Author").
 		Relation("Tags").
-		Where("blog_artikels.id != ?", article.ID).
-		Where("status = ?", constants.StatusPublished).
-		Where("deleted_at IS NULL").
-		Where("published_at <= ?", time.Now()).
+		Where("ba.id != ?", article.ID).
+		Where("ba.status = ?", constants.StatusPublished).
+		Where("ba.deleted_at IS NULL").
+		Where("ba.published_at <= ?", time.Now()).
 		WhereOr(tagConditions[0], params[0])
 
 	// Add tag conditions if present
