@@ -8,7 +8,6 @@ import (
 	"sora_landing_be/pkg/errors"
 	internalHTTP "sora_landing_be/pkg/http"
 	"sora_landing_be/pkg/http/server/http_response"
-	"sora_landing_be/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -113,7 +112,6 @@ func (ctl *UserController) Get(ctx *gin.Context) {
 func (ctl *UserController) GetProfile(ctx *gin.Context) {
 	res, err := ctl.UserService.Detail(ctx, authentication.GetUserDataFromToken(ctx).UserID)
 	if err != nil {
-		logger.Log.Debug(authentication.GetUserDataFromToken(ctx).UserID)
 		http_response.SendError(ctx, err)
 
 		return

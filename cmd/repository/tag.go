@@ -41,6 +41,8 @@ func (r *tagRepository) ListTag(ctx context.Context, req requests.ListTag) ([]do
 	q := r.db.InitQuery(ctx).
 		NewSelect().
 		Model(&res).
+		Relation("CreatedBy").
+		Relation("EditedBy").
 		Limit(req.PageSize).
 		Offset(req.CalculateOffset()).
 		Order(fmt.Sprintf("%s %s", req.OrderBy, req.OrderDir))
@@ -54,6 +56,7 @@ func (r *tagRepository) UpdateTag(ctx context.Context, data *domain.Tag) error {
 		NewUpdate().
 		Model(data).
 		Where("id = ?", data.ID).
+		OmitZero().
 		ExcludeColumn("created_at").
 		Returning("id").
 		Exec(ctx)
@@ -73,6 +76,8 @@ func (r *tagRepository) GetTag(ctx context.Context, id string) (res domain.Tag, 
 	err = r.db.InitQuery(ctx).
 		NewSelect().
 		Model(&res).
+		Relation("CreatedBy").
+		Relation("EditedBy").
 		Where(`"tag"."id" = ?`, id).Scan(ctx)
 	return res, err
 }

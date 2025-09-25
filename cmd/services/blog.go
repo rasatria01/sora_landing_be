@@ -169,10 +169,6 @@ func (s *blogService) GetArticle(ctx context.Context, id string) (response.BlogA
 	}
 
 	// Increment views asynchronously
-	go func() {
-		bgCtx := context.Background()
-		_ = s.blogRepo.IncrementViews(bgCtx, id)
-	}()
 
 	res.FromDomain(&article)
 	return res, nil
@@ -187,10 +183,6 @@ func (s *blogService) GetArticleBySlug(ctx context.Context, slug string) (respon
 	}
 
 	// Increment views asynchronously
-	go func() {
-		bgCtx := context.Background()
-		_ = s.blogRepo.IncrementViews(bgCtx, article.ID)
-	}()
 
 	res.FromDomain(&article)
 	return res, nil

@@ -50,7 +50,7 @@ func (r *BlogArtikel) ToDomain(userID string, slug string) *domain.BlogArtikel {
 		Status:     r.Status,
 		CategoryID: r.CategoryID,
 		AuthorID:   userID,
-		Tags:       make([]domain.Tag, 0), // will be filled later by service
+		Tags:       make([]*domain.Tag, 0), // will be filled later by service
 	}
 
 	if r.Status == constants.StatusPublished {

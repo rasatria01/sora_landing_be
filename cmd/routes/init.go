@@ -34,8 +34,8 @@ func RegisterV1(router *gin.Engine) {
 		}
 
 		registerAuth(v1)
-		registerTag(v1)
 		v1.Use(middlewares.TokenAuthMiddleware())
+		registerTag(v1)
 		registerDemo(v1)
 		registerCategory(v1)
 		RegisterFileRoutes(v1)

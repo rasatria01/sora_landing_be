@@ -274,28 +274,34 @@ func (r *blogRepository) ListPublicArticles(ctx context.Context, req requests.Li
 		Model(&res).
 		Relation("Category").
 		Relation("Author").
-		Relation("Tags").
-		Where("ba.status = ?", constants.StatusPublished).
-		Where("ba.deleted_at IS NULL").
-		Where("ba.published_at <= ?", time.Now())
+		Relation("Tags")
 
 	// Apply filters
 	if req.CategoryID != "" {
-		q.Where("ba.category_id = ?", req.CategoryID)
+		q.Where("category_id = ?", req.CategoryID)
 	}
 	if req.TagID != "" {
 		q.Join("JOIN article_tags at ON at.blog_article_id = blog_artikels.id").
 			Where("at.tag_id = ?", req.TagID)
 	}
+	if req.Status != "" {
+		q.Where("status = ?", req.Status)
+	}
 	if req.Search != "" {
-		q.Where("ba.title ILIKE ? OR ba.content ILIKE ?",
+		q.Where("title ILIKE ? OR content ILIKE ?",
 			fmt.Sprintf("%%%s%%", req.Search),
 			fmt.Sprintf("%%%s%%", req.Search))
+	}
+	if req.StartDate != nil {
+		q.Where("created_at >= ?", req.StartDate)
+	}
+	if req.EndDate != nil {
+		q.Where("created_at <= ?", req.EndDate)
 	}
 
 	// Apply sorting
 	order := "DESC"
-	orderBy := "published_at" // Default sort by publish date for public list
+	orderBy := "created_at"
 	if req.SortBy != "" {
 		orderBy = req.SortBy
 		if req.SortOrder == "asc" {

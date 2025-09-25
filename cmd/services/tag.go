@@ -7,6 +7,7 @@ import (
 	"sora_landing_be/cmd/dto/requests"
 	"sora_landing_be/cmd/dto/response"
 	"sora_landing_be/cmd/repository"
+	"sora_landing_be/pkg/authentication"
 	"sora_landing_be/pkg/database"
 	"sora_landing_be/pkg/utils"
 
@@ -38,6 +39,7 @@ func (t *tagService) CreateTag(ctx context.Context, payload requests.TagRequest)
 			return err
 		}
 		data := payload.ToDomain(uniqueSlug)
+		data.CreatedByID = authentication.GetUserDataFromToken(ctx).UserID
 
 		err = t.tagRepo.CreateTag(ctx, &data)
 		if err != nil {
@@ -72,6 +74,7 @@ func (a *tagService) UpdateTag(ctx context.Context, id string, payload requests.
 		}
 		data := payload.ToDomain(uniqueSlug)
 		data.ID = id
+		data.EditedByID = authentication.GetUserDataFromToken(ctx).UserID
 
 		err = a.tagRepo.UpdateTag(ctx, &data)
 		if err != nil {

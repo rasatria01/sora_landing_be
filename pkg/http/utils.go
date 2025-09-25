@@ -3,10 +3,11 @@ package http
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 func BindData(ctx *gin.Context, obj any) error {
@@ -30,7 +31,8 @@ func BindParams[T any](ctx *gin.Context, key string) (T, error) {
 	var res T
 	var value string
 
-	if key == "id" {
+	switch key {
+	case "id":
 		value = ctx.Param(key)
 		if value == "" {
 			return res, errors.New("id is required")
@@ -46,21 +48,35 @@ func BindParams[T any](ctx *gin.Context, key string) (T, error) {
 			}
 			res = any(id).(T)
 		default:
-			return res, fmt.Errorf("unsupported type")
+			return res, fmt.Errorf("unsupported type for id")
 		}
-	} else if key == "ids" {
+
+	case "slug":
+		value = ctx.Param(key)
+		if value == "" {
+			return res, errors.New("slug is required")
+		}
+		// slug only makes sense as a string
+		switch any(res).(type) {
+		case string:
+			res = any(value).(T)
+		default:
+			return res, fmt.Errorf("unsupported type for slug (must be string)")
+		}
+
+	case "ids":
 		value = ctx.Query(key)
 		if value == "" {
 			return res, errors.New("ids are required")
 		}
 		res = any(strings.Split(value, ",")).(T)
-	} else {
-		return res, fmt.Errorf("key is not supported")
+
+	default:
+		return res, fmt.Errorf("key %q is not supported", key)
 	}
 
 	return res, nil
 }
-
 func SanitizeStruct(payload interface{}) {
 	v := reflect.ValueOf(payload).Elem()
 

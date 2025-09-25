@@ -7,33 +7,33 @@ import (
 
 // PublicArticleList is a simplified version of article for list views
 type PublicArticleList struct {
-	ID          string    `json:"id"`
-	Title       string    `json:"title"`
-	Slug        string    `json:"slug"`
-	Excerpt     string    `json:"excerpt"`
-	ImageURL    string    `json:"image_url"`
-	Views       int64     `json:"views"`
-	PublishedAt time.Time `json:"published_at"`
+	ID          string     `json:"id"`
+	Title       string     `json:"title"`
+	Slug        string     `json:"slug"`
+	Excerpt     string     `json:"excerpt"`
+	ImageURL    string     `json:"image_url"`
+	Views       int64      `json:"views"`
+	PublishedAt *time.Time `json:"published_at"`
 
 	// Simplified related data
-	Category CategoryResponse    `json:"category"`
+	Category *CategoryResponse   `json:"category"`
 	Author   *PublicAuthorDetail `json:"author"`
 	Tags     []Tag               `json:"tags"`
 }
 
 // PublicArticleDetail is the full article view for public
 type PublicArticleDetail struct {
-	ID          string    `json:"id"`
-	Title       string    `json:"title"`
-	Slug        string    `json:"slug"`
-	Content     string    `json:"content"`
-	Excerpt     string    `json:"excerpt"`
-	ImageURL    string    `json:"image_url"`
-	Views       int64     `json:"views"`
-	PublishedAt time.Time `json:"published_at"`
+	ID          string     `json:"id"`
+	Title       string     `json:"title"`
+	Slug        string     `json:"slug"`
+	Content     string     `json:"content"`
+	Excerpt     string     `json:"excerpt"`
+	ImageURL    string     `json:"image_url"`
+	Views       int64      `json:"views"`
+	PublishedAt *time.Time `json:"published_at"`
 
 	// Related data
-	Category CategoryResponse    `json:"category"`
+	Category *CategoryResponse   `json:"category"`
 	Author   *PublicAuthorDetail `json:"author"`
 	Tags     []Tag               `json:"tags"`
 
@@ -55,10 +55,16 @@ func (p *PublicArticleList) FromDomain(article *domain.BlogArtikel) {
 	p.Excerpt = article.Excerpt
 	p.ImageURL = article.ImageURL
 	p.Views = article.Views
-	p.PublishedAt = article.PublishedAt
+	if !article.PublishedAt.IsZero() {
+		p.PublishedAt = &article.PublishedAt
+	}
 
 	if article.Category != nil {
-		p.Category = ToCategoryResponse(*article.Category)
+		p.Category = &CategoryResponse{
+			ID:   article.Category.ID,
+			Name: article.Category.Name,
+			Slug: article.Category.Slug,
+		}
 	}
 	if article.Author != nil {
 		p.Author = &PublicAuthorDetail{
@@ -66,8 +72,13 @@ func (p *PublicArticleList) FromDomain(article *domain.BlogArtikel) {
 			Name: article.Author.Name,
 		}
 	}
-	if len(article.Tags) > 0 {
-		p.Tags = NewListTag(article.Tags)
+	p.Tags = make([]Tag, len(article.Tags))
+	for i, tag := range article.Tags {
+		p.Tags[i] = Tag{
+			ID:   tag.ID,
+			Name: tag.Name,
+			Slug: tag.Slug,
+		}
 	}
 }
 
@@ -79,10 +90,16 @@ func (p *PublicArticleDetail) FromDomain(article *domain.BlogArtikel, relatedArt
 	p.Excerpt = article.Excerpt
 	p.ImageURL = article.ImageURL
 	p.Views = article.Views
-	p.PublishedAt = article.PublishedAt
+	if !article.PublishedAt.IsZero() {
+		p.PublishedAt = &article.PublishedAt
+	}
 
 	if article.Category != nil {
-		p.Category = ToCategoryResponse(*article.Category)
+		p.Category = &CategoryResponse{
+			ID:   article.Category.ID,
+			Name: article.Category.Name,
+			Slug: article.Category.Slug,
+		}
 	}
 	if article.Author != nil {
 		p.Author = &PublicAuthorDetail{
@@ -90,8 +107,13 @@ func (p *PublicArticleDetail) FromDomain(article *domain.BlogArtikel, relatedArt
 			Name: article.Author.Name,
 		}
 	}
-	if len(article.Tags) > 0 {
-		p.Tags = NewListTag(article.Tags)
+	p.Tags = make([]Tag, len(article.Tags))
+	for i, tag := range article.Tags {
+		p.Tags[i] = Tag{
+			ID:   tag.ID,
+			Name: tag.Name,
+			Slug: tag.Slug,
+		}
 	}
 
 	// Convert related articles

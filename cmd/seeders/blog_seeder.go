@@ -9,8 +9,6 @@ import (
 	"sora_landing_be/pkg/database"
 	"sora_landing_be/pkg/utils"
 	"time"
-
-	"github.com/segmentio/ksuid"
 )
 
 func SeedBlogArtikels(ctx context.Context) error {
@@ -44,13 +42,10 @@ func SeedBlogArtikels(ctx context.Context) error {
 
 	// Create 10 blog articles
 	for i := 1; i <= 10; i++ {
-		articleID := ksuid.New().String()
-		title := fmt.Sprintf("Sample Blog Article %d", i)
+		title := fmt.Sprintf("Sample Blog asda hahah Article %d", i)
 
 		article := &domain.BlogArtikel{
-			BaseEntity: domain.BaseEntity{
-				ID: articleID,
-			},
+
 			Title:       title,
 			Slug:        utils.Slugify(title),
 			Content:     fmt.Sprintf("This is the content for article %d. It contains detailed information about the topic.", i),
@@ -63,19 +58,19 @@ func SeedBlogArtikels(ctx context.Context) error {
 			PublishedAt: time.Now(),
 		}
 
-		if _, err := db.NewInsert().Model(article).Exec(ctx); err != nil {
+		if _, err := db.NewInsert().Model(article).Returning("id").Exec(ctx); err != nil {
 			return err
 		}
 
 		// Add 2-4 random tags for each article
-		numTags := rand.Intn(3) + 2
+		numTags := rand.Intn(3) + 1
 		selectedTags := make(map[string]bool)
 
 		for range numTags {
 			tagID := tags[rand.Intn(len(tags))].ID
 			if !selectedTags[tagID] {
 				articleTag := &domain.ArticleTag{
-					ArticleID: articleID,
+					ArticleID: article.ID,
 					TagID:     tagID,
 				}
 				if _, err := db.NewInsert().Model(articleTag).Exec(ctx); err != nil {
