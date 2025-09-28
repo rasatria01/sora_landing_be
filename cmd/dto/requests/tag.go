@@ -11,6 +11,7 @@ type TagRequest struct {
 
 type ListTag struct {
 	dto.PaginationRequest
+	Search string `form:"search,omitempty"`
 }
 
 func (r *TagRequest) ToDomain(slug string) domain.Tag {

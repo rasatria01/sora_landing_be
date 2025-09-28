@@ -17,6 +17,7 @@ type Demo struct {
 
 type ListDemo struct {
 	dto.PaginationRequest
+	Search string `form:"search,omitempty"`
 }
 
 func (r *Demo) ToDomain() domain.DemoEntry {

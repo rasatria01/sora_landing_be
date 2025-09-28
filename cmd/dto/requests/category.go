@@ -11,6 +11,7 @@ type (
 	}
 	ListCategory struct {
 		dto.PaginationRequest
+		Search string `form:"search,omitempty"`
 	}
 )
 

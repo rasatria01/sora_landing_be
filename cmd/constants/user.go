@@ -7,8 +7,9 @@ type (
 )
 
 const (
-	UserRoleAdmin UserRole = "Admin"
-	UserRoleUser  UserRole = "User"
+	UserRoleAdmin      UserRole = "Admin"
+	UserRoleUser       UserRole = "User"
+	UserRoleSuperAdmin UserRole = "SuperAdmin"
 )
 
 const (
@@ -17,7 +18,7 @@ const (
 
 func (receiver UserRole) IsValidEnum() bool {
 	switch receiver {
-	case UserRoleAdmin, UserRoleUser:
+	case UserRoleAdmin, UserRoleUser, UserRoleSuperAdmin:
 		return true
 	default:
 		return false

@@ -37,7 +37,7 @@ func SeedTags(ctx context.Context) error {
 			Name:        name,
 			Slug:        utils.Slugify(name),
 			CreatedByID: users[rand.Intn(len(users))].ID,
-			EditedByID:  users[rand.Intn(len(users))].ID,
+			EditedByID:  &users[rand.Intn(len(users))].ID,
 		}
 
 		if _, err := db.NewInsert().Model(tag).Exec(ctx); err != nil {

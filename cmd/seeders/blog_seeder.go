@@ -8,7 +8,6 @@ import (
 	"sora_landing_be/cmd/domain"
 	"sora_landing_be/pkg/database"
 	"sora_landing_be/pkg/utils"
-	"time"
 )
 
 func SeedBlogArtikels(ctx context.Context) error {
@@ -42,20 +41,19 @@ func SeedBlogArtikels(ctx context.Context) error {
 
 	// Create 10 blog articles
 	for i := 1; i <= 10; i++ {
-		title := fmt.Sprintf("Sample Blog asda hahah Article %d", i)
+		title := fmt.Sprintf("Sample Blog Draft hahah Article %d", i)
 
 		article := &domain.BlogArtikel{
 
-			Title:       title,
-			Slug:        utils.Slugify(title),
-			Content:     fmt.Sprintf("This is the content for article %d. It contains detailed information about the topic.", i),
-			Excerpt:     fmt.Sprintf("Brief excerpt for article %d", i),
-			ImageURL:    fmt.Sprintf("https://example.com/images/article-%d.jpg", i),
-			CategoryID:  categories[rand.Intn(len(categories))].ID,
-			AuthorID:    users[rand.Intn(len(users))].ID,
-			Status:      constants.StatusPublished,
-			Views:       int64(rand.Intn(1000)),
-			PublishedAt: time.Now(),
+			Title:      title,
+			Slug:       utils.Slugify(title),
+			Content:    fmt.Sprintf("This draft is the content for article %d. It contains detailed information about the topic.", i),
+			Excerpt:    fmt.Sprintf("Brief excerpt for article %d", i),
+			ImageURL:   fmt.Sprintf("https://example.com/images/article-%d.jpg", i),
+			CategoryID: categories[rand.Intn(len(categories))].ID,
+			AuthorID:   users[rand.Intn(len(users))].ID,
+			Status:     constants.StatusDraft,
+			Views:      int64(rand.Intn(1000)),
 		}
 
 		if _, err := db.NewInsert().Model(article).Returning("id").Exec(ctx); err != nil {

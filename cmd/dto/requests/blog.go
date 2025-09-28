@@ -23,14 +23,14 @@ type (
 	// ListArtikel is used for querying blog articles with filters
 	ListArtikel struct {
 		dto.PaginationRequest
-		CategoryID string                  `json:"category_id,omitempty"`
-		TagID      string                  `json:"tag_id,omitempty"`
-		Status     constants.ArticleStatus `json:"status,omitempty" validate:"omitempty,oneof=draft published scheduled archived"`
-		Search     string                  `json:"search,omitempty"`
-		StartDate  *time.Time              `json:"start_date,omitempty"`
-		EndDate    *time.Time              `json:"end_date,omitempty"`
-		SortBy     string                  `json:"sort_by,omitempty" validate:"omitempty,oneof=created_at published_at views title"`
-		SortOrder  string                  `json:"sort_order,omitempty" validate:"omitempty,oneof=asc desc"`
+		CategoryID string                  `form:"category_id,omitempty"`
+		TagID      string                  `form:"tag_id,omitempty"`
+		Status     constants.ArticleStatus `form:"status,omitempty" validate:"omitempty,oneof=draft published scheduled archived"`
+		Search     string                  `form:"search,omitempty"`
+		StartDate  *time.Time              `form:"start_date,omitempty"`
+		EndDate    *time.Time              `form:"end_date,omitempty"`
+		SortBy     string                  `form:"sort_by,omitempty" validate:"omitempty,oneof=created_at published_at views title"`
+		SortOrder  string                  `form:"sort_order,omitempty" validate:"omitempty,oneof=asc desc"`
 	}
 
 	// UpdateArticleStatus is used for changing article status

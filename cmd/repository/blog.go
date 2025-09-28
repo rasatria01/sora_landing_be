@@ -144,18 +144,18 @@ func (r *blogRepository) ListArticles(ctx context.Context, req requests.ListArti
 			Where("at.tag_id = ?", req.TagID)
 	}
 	if req.Status != "" {
-		q.Where("status = ?", req.Status)
+		q.Where("ba.status = ?", req.Status)
 	}
 	if req.Search != "" {
-		q.Where("title ILIKE ? OR content ILIKE ?",
+		q.Where("ba.title ILIKE ? OR ba.content ILIKE ?",
 			fmt.Sprintf("%%%s%%", req.Search),
 			fmt.Sprintf("%%%s%%", req.Search))
 	}
 	if req.StartDate != nil {
-		q.Where("created_at >= ?", req.StartDate)
+		q.Where("ba.created_at >= ?", req.StartDate)
 	}
 	if req.EndDate != nil {
-		q.Where("created_at <= ?", req.EndDate)
+		q.Where("ba.created_at <= ?", req.EndDate)
 	}
 
 	// Apply sorting

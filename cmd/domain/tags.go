@@ -7,12 +7,12 @@ import (
 type Tag struct {
 	bun.BaseModel
 	BaseEntity
-	Name        string `bun:",unique,notnull"`
-	Slug        string `bun:",unique,notnull"`
-	CreatedByID string `bun:",nullzero"`
-	CreatedBy   *User  `bun:"rel:belongs-to,join:created_by_id=id"`
-	EditedByID  string `bun:",nullzero"`
-	EditedBy    *User  `bun:"rel:belongs-to,join:edited_by_id=id"`
+	Name        string  `bun:",unique,notnull"`
+	Slug        string  `bun:",unique,notnull"`
+	CreatedByID string  `bun:",nullzero"`
+	CreatedBy   *User   `bun:"rel:belongs-to,join:created_by_id=id"`
+	EditedByID  *string `bun:",nullzero"`
+	EditedBy    *User   `bun:"rel:belongs-to,join:edited_by_id=id"`
 
 	// Reverse relation
 	BlogArtikels []*BlogArtikel `bun:"rel:has-many,join:id=category_id"`

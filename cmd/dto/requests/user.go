@@ -22,6 +22,7 @@ type (
 
 	ListUser struct {
 		dto.PaginationRequest
+		Search string `form:"search,omitempty"`
 	}
 
 	RefreshToken struct {

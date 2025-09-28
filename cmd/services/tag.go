@@ -40,7 +40,6 @@ func (t *tagService) CreateTag(ctx context.Context, payload requests.TagRequest)
 		}
 		data := payload.ToDomain(uniqueSlug)
 		data.CreatedByID = authentication.GetUserDataFromToken(ctx).UserID
-
 		err = t.tagRepo.CreateTag(ctx, &data)
 		if err != nil {
 			return err
@@ -67,6 +66,7 @@ func (a *tagService) ListTag(ctx context.Context, payload requests.ListTag) (dto
 }
 
 func (a *tagService) UpdateTag(ctx context.Context, id string, payload requests.TagRequest) error {
+	var edited string
 	err := database.RunInTx(ctx, database.GetDB(), &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		uniqueSlug, err := utils.GenerateUniqueSlug(ctx, a.tagRepo, payload.Name)
 		if err != nil {
@@ -74,7 +74,9 @@ func (a *tagService) UpdateTag(ctx context.Context, id string, payload requests.
 		}
 		data := payload.ToDomain(uniqueSlug)
 		data.ID = id
-		data.EditedByID = authentication.GetUserDataFromToken(ctx).UserID
+
+		edited = authentication.GetUserDataFromToken(ctx).UserID
+		data.EditedByID = &edited
 
 		err = a.tagRepo.UpdateTag(ctx, &data)
 		if err != nil {

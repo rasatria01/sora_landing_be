@@ -6,7 +6,7 @@ CREATE TABLE demo (
     nama VARCHAR NOT NULL,
     brand VARCHAR NOT NULL,
     no_hp VARCHAR NOT NULL,
-    email VARCHAR,
+    email VARCHAR NOT NULL,
     waktu VARCHAR NOT NULL,
     tanggal TIMESTAMP WITH TIME ZONE NOT NULL
 );
