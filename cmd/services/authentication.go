@@ -112,7 +112,7 @@ func (a *authService) RefreshToken(ctx context.Context, payload requests.Refresh
 	}
 
 	auth, err := a.authRepo.GetByID(ctx, nil, &claims.TokenID)
-	if err != nil {
+	if err != nil { 
 		return res, err
 	}
 	tokenPayload := requests.ToTokenPayload(auth)

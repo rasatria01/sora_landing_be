@@ -40,11 +40,15 @@ func (r *categoryRepository) ListCategory(ctx context.Context, req requests.List
 	var res []domain.Category
 	q := r.db.InitQuery(ctx).
 		NewSelect().
-		Model(&res).
-		Limit(req.PageSize).
+		Model(&res)
+
+	if req.Search != "" {
+		q.Where("name ILIKE ? ",
+			fmt.Sprintf("%%%s%%", req.Search))
+	}
+	q.Limit(req.PageSize).
 		Offset(req.CalculateOffset()).
 		Order(fmt.Sprintf("%s %s", req.OrderBy, req.OrderDir))
-
 	total, err := q.ScanAndCount(ctx)
 	return res, total, err
 }
