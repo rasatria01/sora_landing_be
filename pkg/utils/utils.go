@@ -204,3 +204,12 @@ func GetDiffDataByField[T comparable](data1, data2 any, fields ...string) ([]T, 
 func GetFileName(fullName string) string {
 	return regexp.MustCompile(`_[^_.]*\.`).ReplaceAllString(fullName, ".")
 }
+
+func Contains[T comparable](arr []T, str T) bool {
+	for _, v := range arr {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}

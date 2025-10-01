@@ -31,7 +31,7 @@ func Init(config config.Application, routes ...RegisterRoute) *HTTPServer {
 	router.Use(middlewares.LoggerMiddleware())
 	router.Use(middlewares.ErrorMiddleware())
 	router.NoRoute(middlewares.NotFoundHandler)
-
+	router.Static("/uploads", "./uploads")
 	//init router
 	for _, route := range routes {
 		route(router)

@@ -11,14 +11,19 @@ import (
 
 func RoleHandler(roles ...constants.UserRole) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userRoles := authentication.GetUserRoleFromToken(c) // assume returns map[UserRole]bool
+
+		// check if any of the allowed roles is in user's roles
 		for _, role := range roles {
-			if authentication.GetUserRoleFromToken(c)[role] {
-				break
-			} else {
-				http_response.SendError(c, errors.ForbiddenErrorToAppError())
+			if userRoles[role] {
+				// authorized → continue
+				c.Next()
+				return
 			}
 		}
 
-		c.Next()
+		// if no match, reject
+		http_response.SendError(c, errors.ForbiddenErrorToAppError())
+		c.Abort()
 	}
 }

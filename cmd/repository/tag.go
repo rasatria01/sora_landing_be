@@ -42,8 +42,13 @@ func (r *tagRepository) ListTag(ctx context.Context, req requests.ListTag) ([]do
 		NewSelect().
 		Model(&res).
 		Relation("CreatedBy").
-		Relation("EditedBy").
-		Limit(req.PageSize).
+		Relation("EditedBy")
+	if req.Search != "" {
+		q.Where("tag.name ILIKE ? ",
+			fmt.Sprintf("%%%s%%", req.Search))
+	}
+
+	q.Limit(req.PageSize).
 		Offset(req.CalculateOffset()).
 		Order(fmt.Sprintf("%s %s", req.OrderBy, req.OrderDir))
 

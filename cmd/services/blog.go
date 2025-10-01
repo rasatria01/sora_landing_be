@@ -22,7 +22,7 @@ import (
 type BlogService interface {
 	// Create and Update operations
 	CreateArticle(ctx context.Context, userID string, payload requests.BlogArtikel) error
-	UpdateArticle(ctx context.Context, id string, payload requests.BlogArtikel) error
+	UpdateArticle(ctx context.Context, id string, payload requests.UpdateArtikel) error
 	UpdateArticleStatus(ctx context.Context, id string, payload requests.UpdateArticleStatus) error
 
 	// Read operations
@@ -86,7 +86,7 @@ func (s *blogService) CreateArticle(ctx context.Context, userID string, payload 
 	return err
 }
 
-func (s *blogService) UpdateArticle(ctx context.Context, id string, payload requests.BlogArtikel) error {
+func (s *blogService) UpdateArticle(ctx context.Context, id string, payload requests.UpdateArtikel) error {
 	err := database.RunInTx(ctx, database.GetDB(), &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		// Get existing article
 		existing, err := s.blogRepo.GetArticle(ctx, id)
@@ -100,7 +100,7 @@ func (s *blogService) UpdateArticle(ctx context.Context, id string, payload requ
 
 		// Generate new slug if title changed
 		var uniqueSlug string
-		if existing.Title != payload.Title {
+		if payload.Title != "" && existing.Title != payload.Title {
 			uniqueSlug, err = utils.GenerateUniqueSlug(ctx, s.blogRepo, payload.Title)
 			if err != nil {
 				return err

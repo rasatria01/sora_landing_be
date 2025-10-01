@@ -46,7 +46,7 @@ func (ctl *BlogController) UpdateArticle(ctx *gin.Context) {
 		return
 	}
 
-	var payload requests.BlogArtikel
+	var payload requests.UpdateArtikel
 	if err := internalHTTP.BindData(ctx, &payload); err != nil {
 		http_response.SendError(ctx, errors.ValidationErrorToAppError(err))
 		return

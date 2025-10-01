@@ -13,7 +13,22 @@ type (
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
 	}
+	Profile struct {
+		ID     string   `json:"id"`
+		Name   string   `json:"name"`
+		Email  string   `json:"email"`
+		Permit []string `json:"permit"`
+	}
 )
+
+func NewProfile(user domain.User, permit []string) Profile {
+	return Profile{
+		ID:     user.ID,
+		Name:   user.Name,
+		Email:  user.Email,
+		Permit: permit,
+	}
+}
 
 func NewListUser(users []domain.User) []User {
 	var res []User

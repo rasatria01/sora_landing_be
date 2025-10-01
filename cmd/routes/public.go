@@ -10,7 +10,6 @@ import (
 func registerPublic(router *gin.RouterGroup) {
 	ctl := controllers.NewDemoController(services.ServicePool.DemoService)
 	bctl := controllers.NewBlogController(services.ServicePool.BlogService)
-	userCtl := controllers.NewFileController(services.ServicePool.FileService)
 
 	payment := router.Group("/demo")
 	{
@@ -23,9 +22,4 @@ func registerPublic(router *gin.RouterGroup) {
 		blog.GET("", bctl.ListPublicArticles)
 	}
 
-	media := router.Group("/media")
-	{
-		media.GET("/:id", userCtl.GetPublicFile)
-
-	}
 }

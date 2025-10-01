@@ -3,12 +3,14 @@ package services
 import (
 	"context"
 	"database/sql"
+	"sora_landing_be/cmd/constants"
 	"sora_landing_be/cmd/dto"
 	"sora_landing_be/cmd/dto/requests"
 	"sora_landing_be/cmd/dto/response"
 	"sora_landing_be/cmd/repository"
 	"sora_landing_be/pkg/authentication"
 	"sora_landing_be/pkg/database"
+	"sora_landing_be/pkg/utils"
 
 	"github.com/uptrace/bun"
 )
@@ -19,6 +21,7 @@ type UserService interface {
 	Update(ctx context.Context, id string, payload requests.CreateUser) error
 	DeleteSrv(ctx context.Context, userID string) error
 	Detail(ctx context.Context, userID string) (response.User, error)
+	Profile(ctx context.Context, userID string) (response.Profile, error)
 }
 
 type userService struct {
@@ -115,5 +118,18 @@ func (u *userService) Detail(ctx context.Context, userID string) (response.User,
 	}
 
 	res = response.NewUser(data)
+	return res, nil
+}
+func (u *userService) Profile(ctx context.Context, userID string) (response.Profile, error) {
+	var res response.Profile
+	data, err := u.userRepo.GetUser(ctx, userID)
+	if err != nil {
+		return res, err
+	}
+	permit := []string{}
+	if utils.Contains(data.Roles, constants.UserRoleSuperAdmin) {
+		permit = []string{"users"}
+	}
+	res = response.NewProfile(data, permit)
 	return res, nil
 }

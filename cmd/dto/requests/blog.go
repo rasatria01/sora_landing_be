@@ -19,6 +19,16 @@ type (
 		Status     constants.ArticleStatus `json:"status" validate:"required,oneof=draft published scheduled archived"`
 		PublishAt  *time.Time              `json:"publish_at,omitempty" validate:"required_if=Status scheduled"`
 	}
+	UpdateArtikel struct {
+		Title      string                   `json:"title" validate:"required,min=3,max=255"`
+		Content    string                   `json:"content" validate:"required"`
+		Excerpt    string                   `json:"excerpt" validate:"omitempty,max=500"`
+		ImageURL   *string                  `json:"image_url" validate:"omitempty,url"`
+		CategoryID *string                  `json:"category_id" validate:"omitempty"`
+		TagIDs     []string                 `json:"tag_ids" validate:"dive,omitempty"`
+		Status     *constants.ArticleStatus `json:"status" validate:"omitempty,oneof=draft published scheduled archived"`
+		PublishAt  *time.Time               `json:"publish_at,omitempty" validate:"required_if=Status scheduled"`
+	}
 
 	// ListArtikel is used for querying blog articles with filters
 	ListArtikel struct {
@@ -58,6 +68,46 @@ func (r *BlogArtikel) ToDomain(userID string, slug string) *domain.BlogArtikel {
 		article.PublishedAt = now
 	} else if r.Status == constants.StatusScheduled && r.PublishAt != nil {
 		article.PublishedAt = *r.PublishAt
+	}
+
+	return article
+}
+func (r *UpdateArtikel) ToDomain(userID string, slug string) *domain.BlogArtikel {
+	article := &domain.BlogArtikel{
+		Slug:     slug,
+		AuthorID: userID,
+		Tags:     make([]*domain.Tag, 0), // tags handled in service
+	}
+
+	if r.Title != "" {
+		article.Title = r.Title
+	}
+
+	if r.Content != "" {
+		article.Content = r.Content
+	}
+
+	if r.Excerpt != "" {
+		article.Excerpt = r.Excerpt
+	}
+
+	if r.ImageURL != nil {
+		article.ImageURL = *r.ImageURL
+	}
+
+	if r.Status != nil {
+		article.Status = *r.Status
+
+		// handle published/scheduled
+		if *r.Status == constants.StatusPublished {
+			article.PublishedAt = time.Now()
+		} else if *r.Status == constants.StatusScheduled && r.PublishAt != nil {
+			article.PublishedAt = *r.PublishAt
+		}
+	}
+
+	if r.CategoryID != nil {
+		article.CategoryID = *r.CategoryID
 	}
 
 	return article

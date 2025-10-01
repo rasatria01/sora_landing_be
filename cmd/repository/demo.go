@@ -49,8 +49,12 @@ func (r *demoRepository) ListDemos(ctx context.Context, req requests.ListDemo) (
 	var entries []domain.DemoEntry
 	q := r.db.InitQuery(ctx).
 		NewSelect().
-		Model(&entries).
-		Limit(req.PageSize).
+		Model(&entries)
+	if req.Search != "" {
+		q.Where("nama ILIKE ? ",
+			fmt.Sprintf("%%%s%%", req.Search))
+	}
+	q.Limit(req.PageSize).
 		Offset(req.CalculateOffset()).
 		Order(fmt.Sprintf("%s %s", req.OrderBy, req.OrderDir))
 

@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/spf13/viper"
 )
-
-const configFilePath = "./pkg/config/files"
 
 type Config struct {
 	Application    Application    `yaml:"application"`
@@ -23,35 +22,42 @@ var once sync.Once
 var config Config
 
 func LoadConfig() Config {
-	var (
-		err error
-	)
+	var err error
 	once.Do(func() {
-		// Load the configuration from the file
-		// This is a placeholder for actual loading logic
-		viper.SetConfigName("env")
-		viper.SetConfigType("yaml")
-		viper.AddConfigPath(configFilePath)
+		// Use CONFIG_PATH env if set (Docker friendly), else default path
+		configPath := os.Getenv("CONFIG_PATH")
+		if configPath == "" {
+			configPath = "./pkg/config/files"
+		}
 
+		viper.SetConfigName("env") // name of your config file without extension
+		viper.SetConfigType("yaml")
+		viper.AddConfigPath(configPath)
+
+		// Automatically override with env variables if available
 		viper.AutomaticEnv()
+
+		// Read config
 		if err = viper.ReadInConfig(); err != nil {
 			var configFileNotFoundError viper.ConfigFileNotFoundError
 			if errors.As(err, &configFileNotFoundError) {
-				err = fmt.Errorf("config file not found")
+				err = fmt.Errorf("config file not found in %s", configPath)
 				return
-				// Handle the case where the config file is not found
-				// For example, you might want to log this or set default values
 			}
 			err = fmt.Errorf("error reading config file: %w", err)
 			return
 		}
+
+		// Unmarshal into struct
 		if err = viper.Unmarshal(&config); err != nil {
+			err = fmt.Errorf("error unmarshaling config: %w", err)
 			return
 		}
 	})
 
 	if err != nil {
-		log.Fatalf(fmt.Sprintf("error loading config: %s", err.Error()))
+		log.Fatalf("error loading config: %s", err.Error())
 	}
+
 	return config
 }

@@ -21,7 +21,6 @@ type userRepository struct {
 	db *database.Database
 }
 
-
 func NewUserRepository(db *database.Database) UserRepository {
 	return &userRepository{
 		db: db,
@@ -40,11 +39,15 @@ func (r *userRepository) ListUser(ctx context.Context, req requests.ListUser) ([
 	var res []domain.User
 	q := r.db.InitQuery(ctx).
 		NewSelect().
-		Model(&res).
-		Limit(req.PageSize).
+		Model(&res)
+
+	if req.Search != "" {
+		q.Where("name ILIKE ? ",
+			fmt.Sprintf("%%%s%%", req.Search))
+	}
+	q.Limit(req.PageSize).
 		Offset(req.CalculateOffset()).
 		Order(fmt.Sprintf("%s %s", req.OrderBy, req.OrderDir))
-
 	total, err := q.ScanAndCount(ctx)
 	return res, total, err
 }

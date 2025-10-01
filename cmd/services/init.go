@@ -15,7 +15,6 @@ type PoolService struct {
 	CategoryService CategoryService
 	BlogService     BlogService
 	DemoService     DemoService
-	FileService     FileService
 }
 
 func Init() {
@@ -31,7 +30,6 @@ func Init() {
 			CategoryService: NewCatService(repo.CategoryRepository),
 			BlogService:     NewBlogService(repo.BlogRepository, repo.TagRepository),
 			DemoService:     NewDemoService(repo.DemoRepository),
-			FileService:     NewFileService(repo.FileRepository, "localhost:3000"),
 		}
 	})
 }

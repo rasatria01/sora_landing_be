@@ -63,6 +63,7 @@ func (r *blogRepository) UpdateArticle(ctx context.Context, data *domain.BlogArt
 		NewUpdate().
 		Model(data).
 		Where("id = ?", data.ID).
+		OmitZero().
 		ExcludeColumn("id", "created_at", "views").
 		Returning("id").
 		Exec(ctx)

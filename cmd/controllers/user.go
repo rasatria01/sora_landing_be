@@ -110,7 +110,7 @@ func (ctl *UserController) Get(ctx *gin.Context) {
 }
 
 func (ctl *UserController) GetProfile(ctx *gin.Context) {
-	res, err := ctl.UserService.Detail(ctx, authentication.GetUserDataFromToken(ctx).UserID)
+	res, err := ctl.UserService.Profile(ctx, authentication.GetUserDataFromToken(ctx).UserID)
 	if err != nil {
 		http_response.SendError(ctx, err)
 
