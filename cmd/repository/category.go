@@ -40,7 +40,9 @@ func (r *categoryRepository) ListCategory(ctx context.Context, req requests.List
 	var res []domain.Category
 	q := r.db.InitQuery(ctx).
 		NewSelect().
-		Model(&res)
+		Model(&res).
+		Relation("CreatedBy").
+		Relation("EditedBy")
 
 	if req.Search != "" {
 		q.Where("name ILIKE ? ",
@@ -58,7 +60,7 @@ func (r *categoryRepository) UpdateCategory(ctx context.Context, data *domain.Ca
 		NewUpdate().
 		Model(data).
 		Where("id = ?", data.ID).
-		ExcludeColumn("created_at").
+		ExcludeColumn("created_at", "created_by_id").
 		Returning("id").
 		Exec(ctx)
 	return err
@@ -77,6 +79,8 @@ func (r *categoryRepository) GetCategory(ctx context.Context, id string) (res do
 	err = r.db.InitQuery(ctx).
 		NewSelect().
 		Model(&res).
+		Relation("CreatedBy").
+		Relation("EditedBy").
 		Relation("BlogArtikels").
 		Where(`"category"."id" = ?`, id).Scan(ctx)
 	return res, err

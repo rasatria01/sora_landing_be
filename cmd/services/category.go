@@ -7,6 +7,7 @@ import (
 	"sora_landing_be/cmd/dto/requests"
 	"sora_landing_be/cmd/dto/response"
 	"sora_landing_be/cmd/repository"
+	"sora_landing_be/pkg/authentication"
 	"sora_landing_be/pkg/database"
 	"sora_landing_be/pkg/utils"
 
@@ -38,7 +39,7 @@ func (t *catService) CreateCategory(ctx context.Context, payload requests.Catego
 			return err
 		}
 		data := payload.ToDomain(uniqueSlug)
-
+		data.CreatedByID = authentication.GetUserDataFromToken(ctx).UserID
 		err = t.catRepo.CreateCategory(ctx, &data)
 		if err != nil {
 			return err
@@ -72,8 +73,10 @@ func (a *catService) UpdateCategory(ctx context.Context, id string, payload requ
 		}
 		data := payload.ToDomain(uniqueSlug)
 		data.ID = id
+		edited := authentication.GetUserDataFromToken(ctx).UserID
+		data.EditedByID = &edited
 
-		err = a.catRepo.CreateCategory(ctx, &data)
+		err = a.catRepo.UpdateCategory(ctx, &data)
 		if err != nil {
 			return err
 		}

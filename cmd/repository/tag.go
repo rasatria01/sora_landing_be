@@ -61,8 +61,7 @@ func (r *tagRepository) UpdateTag(ctx context.Context, data *domain.Tag) error {
 		NewUpdate().
 		Model(data).
 		Where("id = ?", data.ID).
-		Column("*"). // include all fields
-		ExcludeColumn("CreatedAt").
+		ExcludeColumn("created_at", "created_by_id").
 		Returning("id").
 		Exec(ctx)
 	return err
