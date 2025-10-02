@@ -45,7 +45,7 @@ func (r *categoryRepository) ListCategory(ctx context.Context, req requests.List
 		Relation("EditedBy")
 
 	if req.Search != "" {
-		q.Where("name ILIKE ? ",
+		q.Where("category.name ILIKE ? ",
 			fmt.Sprintf("%%%s%%", req.Search))
 	}
 	q.Limit(req.PageSize).
