@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	default_err "errors"
 	"fmt"
 	"sora_landing_be/cmd/domain"
 	"sora_landing_be/cmd/dto/requests"
@@ -11,11 +13,13 @@ import (
 
 type CategoryRepository interface {
 	CreateCategory(ctx context.Context, data *domain.Category) error
+	CreateCategoryReturnID(ctx context.Context, data *domain.Category) (string, error)
 	ListCategory(ctx context.Context, req requests.ListCategory) ([]domain.Category, int, error)
 	UpdateCategory(ctx context.Context, data *domain.Category) error
 	DeleteCategory(ctx context.Context, id string) error
 	GetCategory(ctx context.Context, id string) (res domain.Category, err error)
 	SlugExists(ctx context.Context, slug string) (bool, error)
+	GetCategoryByName(ctx context.Context, name string) (res *domain.Category, err error)
 }
 
 type categoryRepository struct {
@@ -34,6 +38,14 @@ func (r *categoryRepository) CreateCategory(ctx context.Context, data *domain.Ca
 		return errors.CheckUniqueViolation(err)
 	}
 	return err
+}
+func (r *categoryRepository) CreateCategoryReturnID(ctx context.Context, data *domain.Category) (string, error) {
+	var id string
+	err := r.db.InitQuery(ctx).NewInsert().Model(data).Returning("id").Scan(ctx, &id)
+	if err != nil {
+		return "", errors.CheckUniqueViolation(err)
+	}
+	return id, err
 }
 
 func (r *categoryRepository) ListCategory(ctx context.Context, req requests.ListCategory) ([]domain.Category, int, error) {
@@ -84,6 +96,24 @@ func (r *categoryRepository) GetCategory(ctx context.Context, id string) (res do
 		Relation("BlogArtikels").
 		Where(`"category"."id" = ?`, id).Scan(ctx)
 	return res, err
+}
+func (r *categoryRepository) GetCategoryByName(ctx context.Context, name string) (*domain.Category, error) {
+	var res domain.Category
+	err := r.db.InitQuery(ctx).
+		NewSelect().
+		Model(&res).
+		Relation("CreatedBy").
+		Relation("EditedBy").
+		Relation("BlogArtikels").
+		Where(`"category"."name" = ?`, name).
+		Scan(ctx)
+	if err != nil {
+		if default_err.Is(err, sql.ErrNoRows) {
+			return nil, nil // category not found
+		}
+		return nil, err
+	}
+	return &res, nil
 }
 
 func (t *categoryRepository) SlugExists(ctx context.Context, slug string) (bool, error) {

@@ -19,6 +19,9 @@ type (
 		Status     constants.ArticleStatus `json:"status" validate:"required,oneof=draft published scheduled archived"`
 		PublishAt  *time.Time              `json:"publish_at,omitempty" validate:"required_if=Status scheduled"`
 	}
+	FromURL struct {
+		URL string `json:"url" validate:"required"`
+	}
 	UpdateArtikel struct {
 		Title      string                   `json:"title" validate:"required,min=3,max=255"`
 		Content    string                   `json:"content" validate:"required"`

@@ -20,6 +20,7 @@ func registerBlog(router *gin.RouterGroup) {
 
 		// Write operations
 		blog.POST("", blogCtl.CreateArticle)
+		blog.POST("external", blogCtl.CreateArticleFromURL)
 		blog.PUT(":id", blogCtl.UpdateArticle)
 		blog.PATCH(":id/status", blogCtl.UpdateArticleStatus)
 		blog.PUT(":id/tags", blogCtl.UpdateArticleTags)
