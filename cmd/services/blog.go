@@ -7,21 +7,27 @@ import (
 
 	"net/http"
 	"sora_landing_be/cmd/constants"
+	"sora_landing_be/cmd/domain"
 	"sora_landing_be/cmd/dto"
 	"sora_landing_be/cmd/dto/requests"
 	"sora_landing_be/cmd/dto/response"
 	"sora_landing_be/cmd/repository"
 	"sora_landing_be/pkg/database"
 	internal_err "sora_landing_be/pkg/errors"
+	"sora_landing_be/pkg/logger"
 	"sora_landing_be/pkg/utils"
 	"time"
 
+	"github.com/go-shiori/go-readability"
 	"github.com/uptrace/bun"
+	"go.uber.org/zap"
 )
 
 type BlogService interface {
 	// Create and Update operations
 	CreateArticle(ctx context.Context, userID string, payload requests.BlogArtikel) error
+	CreateArticleFromURL(ctx context.Context, userID string, payload requests.FromURL) error
+	// CreateByLink(ctx context.Context, payl)
 	UpdateArticle(ctx context.Context, id string, payload requests.UpdateArtikel) error
 	UpdateArticleStatus(ctx context.Context, id string, payload requests.UpdateArticleStatus) error
 
@@ -46,12 +52,14 @@ type BlogService interface {
 type blogService struct {
 	blogRepo repository.BlogRepository
 	tagRepo  repository.TagRepository
+	catRepo  repository.CategoryRepository
 }
 
-func NewBlogService(blogRepo repository.BlogRepository, tagRepo repository.TagRepository) BlogService {
+func NewBlogService(blogRepo repository.BlogRepository, tagRepo repository.TagRepository, catRepo repository.CategoryRepository) BlogService {
 	return &blogService{
 		blogRepo: blogRepo,
 		tagRepo:  tagRepo,
+		catRepo:  catRepo,
 	}
 }
 
@@ -84,6 +92,128 @@ func (s *blogService) CreateArticle(ctx context.Context, userID string, payload 
 	})
 
 	return err
+}
+
+func (s *blogService) CreateArticleFromURL(ctx context.Context, userID string, payload requests.FromURL) error {
+	return database.RunInTx(ctx, database.GetDB(), &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+
+		// --- 1. Ensure "external" category exists ---
+		cat, err := s.catRepo.GetCategoryByName(ctx, "external")
+		if err != nil {
+			logger.Log.Error("Error fetching category", zap.Error(err))
+			return err
+		}
+
+		if cat == nil {
+			slug, err := utils.GenerateUniqueSlug(ctx, s.catRepo, "external")
+			if err != nil {
+				logger.Log.Error("Error generating category slug", zap.Error(err))
+				return err
+			}
+
+			newCat := &domain.Category{
+				Name:        "external",
+				Slug:        slug,
+				CreatedByID: userID,
+			}
+
+			catID, err := s.catRepo.CreateCategoryReturnID(ctx, newCat)
+			if err != nil {
+				logger.Log.Error("Error creating category", zap.Error(err))
+				return err
+			}
+
+			cat = &domain.Category{
+				BaseEntity: domain.BaseEntity{ID: catID},
+				Name:       "external",
+				Slug:       slug,
+			}
+		}
+
+		// --- 2. Ensure "external" tag exists ---
+		tag, err := s.tagRepo.GetTagByName(ctx, "external")
+		if err != nil {
+			logger.Log.Error("Error fetching tag", zap.Error(err))
+			return err
+		}
+
+		if tag == nil {
+			slug, err := utils.GenerateUniqueSlug(ctx, s.tagRepo, "external")
+			if err != nil {
+				logger.Log.Error("Error generating tag slug", zap.Error(err))
+				return err
+			}
+
+			newTag := &domain.Tag{
+				Name:        "external",
+				Slug:        slug,
+				CreatedByID: userID,
+			}
+
+			tagID, err := s.tagRepo.CreateTagReturnID(ctx, newTag)
+			if err != nil {
+				logger.Log.Error("Error creating tag", zap.Error(err))
+				return err
+			}
+
+			tag = &domain.Tag{
+				BaseEntity: domain.BaseEntity{ID: tagID},
+				Name:       "external",
+				Slug:       slug,
+			}
+		}
+
+		// --- 3. Fetch article from URL ---
+		extractedArticle, err := readability.FromURL(payload.URL, 30*time.Second)
+		if err != nil {
+			logger.Log.Error("Readability error", zap.Error(err), zap.String("url", payload.URL))
+			return err
+		}
+
+		// --- 4. Generate unique slug for the article ---
+		uniqueSlug, err := utils.GenerateUniqueSlug(ctx, s.blogRepo, extractedArticle.Title)
+		if err != nil {
+			logger.Log.Error("Error generating article slug", zap.Error(err))
+			return err
+		}
+
+		// --- 5. Convert to domain model ---
+		articleDomain := &domain.BlogArtikel{
+			Title:       extractedArticle.Title,
+			Slug:        uniqueSlug,
+			Content:     extractedArticle.Content,
+			Excerpt:     extractedArticle.Excerpt,
+			CategoryID:  cat.ID,
+			ImageURL:    extractedArticle.Image,
+			AuthorID:    userID,
+			Status:      constants.StatusPublished,
+			PublishedAt: time.Now(),
+			Tags:        []*domain.Tag{}, // start empty
+		}
+
+		// --- 6. Save article ---
+		if err := s.blogRepo.CreateArticlefromURL(ctx, articleDomain); err != nil {
+			logger.Log.Error("Error creating article", zap.Error(err))
+			return err
+		}
+
+		// --- 7. Add "external" tag to article ---
+		if tag != nil && tag.ID != "" {
+			if err := s.blogRepo.AddArticleTags(ctx, articleDomain.ID, []string{tag.ID}); err != nil {
+				logger.Log.Error("Error adding tag to article", zap.Error(err), zap.String("article_id", articleDomain.ID))
+				return err
+			}
+		}
+
+		logger.Log.Info("Article successfully created",
+			zap.String("article_id", articleDomain.ID),
+			zap.String("category", cat.Name),
+			zap.String("tag", tag.Name),
+			zap.String("url", payload.URL),
+		)
+
+		return nil
+	})
 }
 
 func (s *blogService) UpdateArticle(ctx context.Context, id string, payload requests.UpdateArtikel) error {

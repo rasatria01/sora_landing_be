@@ -39,6 +39,23 @@ func (ctl *BlogController) CreateArticle(ctx *gin.Context) {
 	http_response.SendSuccess(ctx, http.StatusCreated, "Article created successfully", nil)
 }
 
+func (ctl *BlogController) CreateArticleFromURL(ctx *gin.Context) {
+	var payload requests.FromURL
+	if err := internalHTTP.BindData(ctx, &payload); err != nil {
+		http_response.SendError(ctx, errors.ValidationErrorToAppError(err))
+		return
+	}
+
+	userID := authentication.GetUserDataFromToken(ctx).UserID
+	err := ctl.BlogService.CreateArticleFromURL(ctx, userID, payload)
+	if err != nil {
+		http_response.SendError(ctx, err)
+		return
+	}
+
+	http_response.SendSuccess(ctx, http.StatusCreated, "Article created successfully", nil)
+}
+
 func (ctl *BlogController) UpdateArticle(ctx *gin.Context) {
 	id, err := internalHTTP.BindParams[string](ctx, "id")
 	if err != nil {

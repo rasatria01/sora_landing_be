@@ -9,12 +9,16 @@ import (
 	"sora_landing_be/cmd/dto/requests"
 	"sora_landing_be/pkg/database"
 	"sora_landing_be/pkg/errors"
+	"sora_landing_be/pkg/logger"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 type BlogRepository interface {
 	// Create and Update
 	CreateArticle(ctx context.Context, data *domain.BlogArtikel) error
+	CreateArticlefromURL(ctx context.Context, data *domain.BlogArtikel) error
 	UpdateArticle(ctx context.Context, data *domain.BlogArtikel) error
 	UpdateArticleStatus(ctx context.Context, id string, status constants.ArticleStatus, publishAt *time.Time) error
 	IncrementViews(ctx context.Context, id string) error
@@ -53,6 +57,14 @@ func NewBlogRepository(db *database.Database) BlogRepository {
 func (r *blogRepository) CreateArticle(ctx context.Context, data *domain.BlogArtikel) error {
 	_, err := r.db.InitQuery(ctx).NewInsert().Model(data).Returning("id").Exec(ctx)
 	if err != nil {
+		return errors.CheckUniqueViolation(err)
+	}
+	return err
+}
+func (r *blogRepository) CreateArticlefromURL(ctx context.Context, data *domain.BlogArtikel) error {
+	_, err := r.db.InitQuery(ctx).NewInsert().Model(data).Returning("id").Exec(ctx)
+	if err != nil {
+		logger.Log.Error("erorr intern", zap.Error(err))
 		return errors.CheckUniqueViolation(err)
 	}
 	return err

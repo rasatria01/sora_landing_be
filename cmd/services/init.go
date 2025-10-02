@@ -28,7 +28,7 @@ func Init() {
 			),
 			TagService:      NewTagService(repo.TagRepository),
 			CategoryService: NewCatService(repo.CategoryRepository),
-			BlogService:     NewBlogService(repo.BlogRepository, repo.TagRepository),
+			BlogService:     NewBlogService(repo.BlogRepository, repo.TagRepository, repo.CategoryRepository),
 			DemoService:     NewDemoService(repo.DemoRepository),
 		}
 	})
