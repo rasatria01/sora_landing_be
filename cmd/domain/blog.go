@@ -22,6 +22,8 @@ type BlogArtikel struct {
 	Author      *User                   `bun:"rel:belongs-to,join:author_id=id"`
 	Status      constants.ArticleStatus `bun:",notnull,default:'draft'"` // draft, published, archived
 	Views       int64                   `bun:",default:0"`
+	Source      string                  `bun:",notnull,default:'-'"`
+	Featured    *int                    `bun:",unique"`
 	PublishedAt time.Time               `bun:",nullzero"`
 	Tags        []*Tag                  `bun:"m2m:article_tags,join:Article=Tag"`
 }

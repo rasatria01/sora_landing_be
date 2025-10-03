@@ -31,7 +31,7 @@ type PublicArticleDetail struct {
 	ImageURL    string     `json:"image_url"`
 	Views       int64      `json:"views"`
 	PublishedAt *time.Time `json:"published_at"`
-
+	Source      string     `json:"from_url"`
 	// Related data
 	Category *CategoryResponse   `json:"category"`
 	Author   *PublicAuthorDetail `json:"author"`
@@ -90,6 +90,7 @@ func (p *PublicArticleDetail) FromDomain(article *domain.BlogArtikel, relatedArt
 	p.Excerpt = article.Excerpt
 	p.ImageURL = article.ImageURL
 	p.Views = article.Views
+	p.Source = article.Source
 	if !article.PublishedAt.IsZero() {
 		p.PublishedAt = &article.PublishedAt
 	}

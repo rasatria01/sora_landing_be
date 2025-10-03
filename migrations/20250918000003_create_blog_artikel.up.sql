@@ -11,6 +11,8 @@ CREATE TABLE blog_artikels (
     category_id VARCHAR(27) NOT NULL,
     author_id VARCHAR(27) NOT NULL,
     status VARCHAR NOT NULL DEFAULT 'draft',
+    source TEXT NOT NULL DEFAULT '-',   -- url path or "-" as default
+    featured INT UNIQUE,    
     views BIGINT DEFAULT 0,
     published_at TIMESTAMP WITH TIME ZONE,
     FOREIGN KEY (category_id) REFERENCES categories(id),

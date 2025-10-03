@@ -24,6 +24,8 @@ func registerBlog(router *gin.RouterGroup) {
 		blog.PUT(":id", blogCtl.UpdateArticle)
 		blog.PATCH(":id/status", blogCtl.UpdateArticleStatus)
 		blog.PUT(":id/tags", blogCtl.UpdateArticleTags)
+		blog.PATCH(":id/set-featured", blogCtl.SetFeaturedPosition)
+		blog.PATCH(":id/del-featured", blogCtl.RemoveFeaturedPosition)
 
 		// Delete operations
 		blog.DELETE(":id", blogCtl.DeleteArticle)

@@ -46,6 +46,10 @@ type (
 		SortOrder  string                  `form:"sort_order,omitempty" validate:"omitempty,oneof=asc desc"`
 	}
 
+	UpdateFeaturedPos struct {
+		Position int `json:"pos" validate:"required"`
+	}
+
 	// UpdateArticleStatus is used for changing article status
 	UpdateArticleStatus struct {
 		Status    constants.ArticleStatus `json:"status" validate:"required,oneof=draft published scheduled archived"`
