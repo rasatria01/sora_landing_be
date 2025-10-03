@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"database/sql"
+	global_err "errors"
 	"fmt"
 	"sora_landing_be/cmd/constants"
 	"sora_landing_be/cmd/domain"
@@ -33,6 +35,7 @@ type BlogRepository interface {
 	// Public endpoints
 	ListPublicArticles(ctx context.Context, req requests.ListArtikel) ([]domain.BlogArtikel, int, error)
 	GetPublicArticleWithRelated(ctx context.Context, slug string) (article domain.BlogArtikel, related []domain.BlogArtikel, err error)
+	GetFeaturedArticle(ctx context.Context) ([]domain.BlogArtikel, error)
 
 	// Tag related operations
 	AddArticleTags(ctx context.Context, articleID string, tagIDs []string) error
@@ -42,6 +45,13 @@ type BlogRepository interface {
 	// Delete operations
 	DeleteArticle(ctx context.Context, id string) error
 	HardDeleteArticle(ctx context.Context, id string) error
+
+	// set featured
+	SetFeaturedPosition(ctx context.Context, articleID string, pos int) error
+	GetArticleByFeaturedPos(ctx context.Context, pos int) (res *domain.BlogArtikel, err error)
+	RemoveFeaturedPosition(ctx context.Context, articleID string) error
+	ShiftUp(ctx context.Context, from int) error
+	ShiftDown(ctx context.Context, from int) error
 }
 
 type blogRepository struct {
@@ -146,7 +156,8 @@ func (r *blogRepository) ListArticles(ctx context.Context, req requests.ListArti
 		Model(&res).
 		Relation("Category").
 		Relation("Author").
-		Relation("Tags")
+		Relation("Tags").
+		Where("ba.featured IS NULL")
 
 	// Apply filters
 	if req.CategoryID != "" {
@@ -388,4 +399,77 @@ func (r *blogRepository) GetPublicArticleWithRelated(ctx context.Context, slug s
 	}
 
 	return article, related, nil
+}
+
+func (r *blogRepository) GetFeaturedArticle(ctx context.Context) ([]domain.BlogArtikel, error) {
+	var res []domain.BlogArtikel
+	err := r.db.InitQuery(ctx).
+		NewSelect().
+		Model(&res).
+		Relation("Category").
+		Relation("Author").
+		Relation("Tags").
+		Where("ba.featured IS NOT NULL").
+		Order("ba.featured ASC").
+		Limit(3).
+		Scan(ctx)
+	return res, err
+}
+
+func (r *blogRepository) SetFeaturedPosition(ctx context.Context, articleID string, pos int) error {
+	_, err := r.db.InitQuery(ctx).
+		NewUpdate().
+		Model((*domain.BlogArtikel)(nil)).
+		Set("featured = ?", pos).
+		Where("id = ?", articleID).
+		Exec(ctx)
+
+	return err
+}
+func (r *blogRepository) RemoveFeaturedPosition(ctx context.Context, articleID string) error {
+	_, err := r.db.InitQuery(ctx).
+		NewUpdate().
+		Model((*domain.BlogArtikel)(nil)).
+		Set("featured = NULL").
+		Where("id = ?", articleID).
+		Exec(ctx)
+
+	return err
+}
+func (r *blogRepository) ShiftDown(ctx context.Context, from int) error {
+	_, err := r.db.InitQuery(ctx).
+		NewUpdate().
+		Model((*domain.BlogArtikel)(nil)).
+		Set("featured = featured + 1").
+		Where("featured >= ?", from).
+		Where("featured < 3").
+		Exec(ctx) // Don't shift position 3
+
+	return err
+}
+func (r *blogRepository) ShiftUp(ctx context.Context, from int) error {
+	_, err := r.db.InitQuery(ctx).
+		NewUpdate().
+		Model((*domain.BlogArtikel)(nil)).
+		Set("featured = featured - 1").
+		Where("featured > ?", from).
+		Exec(ctx) // Don't shift position 3
+
+	return err
+}
+
+func (r *blogRepository) GetArticleByFeaturedPos(ctx context.Context, pos int) (res *domain.BlogArtikel, err error) {
+	err = r.db.InitQuery(ctx).
+		NewSelect().
+		Model(res).
+		Relation("Category").
+		Relation("Author").
+		Relation("Tags").
+		Where("featured = ?", pos).
+		Scan(ctx)
+
+	if global_err.Is(err, sql.ErrNoRows) {
+		return nil, nil // no featured article found
+	}
+	return res, err
 }

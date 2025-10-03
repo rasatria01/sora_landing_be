@@ -247,3 +247,47 @@ func (ctl *BlogController) GetPublicArticleBySlug(ctx *gin.Context) {
 
 	http_response.SendSuccess(ctx, http.StatusOK, "Article retrieved successfully", article)
 }
+
+func (ctl *BlogController) GetFeaturedArticle(ctx *gin.Context) {
+	articles, err := ctl.BlogService.GetFeaturedArticle(ctx)
+	if err != nil {
+		http_response.SendError(ctx, err)
+		return
+	}
+
+	http_response.SendSuccess(ctx, http.StatusOK, "Article Retrieved successfully", articles)
+}
+
+func (ctl *BlogController) SetFeaturedPosition(ctx *gin.Context) {
+	var params requests.UpdateFeaturedPos
+	id, err := internalHTTP.BindParams[string](ctx, "id")
+	if err != nil {
+		http_response.SendError(ctx, errors.ValidationErrorToAppError(err))
+		return
+	}
+	if err := internalHTTP.BindData(ctx, &params); err != nil {
+		http_response.SendError(ctx, errors.ValidationErrorToAppError(err))
+		return
+	}
+
+	err = ctl.BlogService.SetFeaturedPosition(ctx, id, params.Position)
+	if err != nil {
+		http_response.SendError(ctx, err)
+		return
+	}
+	http_response.SendSuccess(ctx, http.StatusOK, "", err)
+}
+
+func (ctl *BlogController) RemoveFeaturedPosition(ctx *gin.Context) {
+	id, err := internalHTTP.BindParams[string](ctx, "id")
+	if err != nil {
+		http_response.SendError(ctx, errors.ValidationErrorToAppError(err))
+		return
+	}
+	err = ctl.BlogService.RemoveFeaturedPosition(ctx, id)
+	if err != nil {
+		http_response.SendError(ctx, errors.ValidationErrorToAppError(err))
+		return
+	}
+	http_response.SendSuccess(ctx, http.StatusOK, "Successfully updated", nil)
+}

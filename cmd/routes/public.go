@@ -20,6 +20,7 @@ func registerPublic(router *gin.RouterGroup) {
 	{
 		blog.GET(":id", bctl.GetPublicArticleBySlug)
 		blog.GET("", bctl.ListPublicArticles)
+		blog.GET("/featured", bctl.GetFeaturedArticle)
 	}
 
 }

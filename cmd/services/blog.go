@@ -14,13 +14,11 @@ import (
 	"sora_landing_be/cmd/repository"
 	"sora_landing_be/pkg/database"
 	internal_err "sora_landing_be/pkg/errors"
-	"sora_landing_be/pkg/logger"
 	"sora_landing_be/pkg/utils"
 	"time"
 
 	"github.com/go-shiori/go-readability"
 	"github.com/uptrace/bun"
-	"go.uber.org/zap"
 )
 
 type BlogService interface {
@@ -30,6 +28,8 @@ type BlogService interface {
 	// CreateByLink(ctx context.Context, payl)
 	UpdateArticle(ctx context.Context, id string, payload requests.UpdateArtikel) error
 	UpdateArticleStatus(ctx context.Context, id string, payload requests.UpdateArticleStatus) error
+	SetFeaturedPosition(ctx context.Context, articleID string, pos int) error
+	RemoveFeaturedPosition(ctx context.Context, articleID string) error
 
 	// Read operations
 	GetArticle(ctx context.Context, id string) (response.BlogArticle, error)
@@ -40,6 +40,7 @@ type BlogService interface {
 	// Public endpoints
 	ListPublicArticles(ctx context.Context, params requests.ListArtikel) (dto.PaginationResponse[response.PublicArticleList], error)
 	GetPublicArticleBySlug(ctx context.Context, slug string) (response.PublicArticleDetail, error)
+	GetFeaturedArticle(ctx context.Context) ([]response.PublicArticleList, error)
 
 	// Tag operations
 	UpdateArticleTags(ctx context.Context, articleID string, tagIDs []string) error
@@ -100,14 +101,12 @@ func (s *blogService) CreateArticleFromURL(ctx context.Context, userID string, p
 		// --- 1. Ensure "external" category exists ---
 		cat, err := s.catRepo.GetCategoryByName(ctx, "external")
 		if err != nil {
-			logger.Log.Error("Error fetching category", zap.Error(err))
 			return err
 		}
 
 		if cat == nil {
 			slug, err := utils.GenerateUniqueSlug(ctx, s.catRepo, "external")
 			if err != nil {
-				logger.Log.Error("Error generating category slug", zap.Error(err))
 				return err
 			}
 
@@ -119,7 +118,6 @@ func (s *blogService) CreateArticleFromURL(ctx context.Context, userID string, p
 
 			catID, err := s.catRepo.CreateCategoryReturnID(ctx, newCat)
 			if err != nil {
-				logger.Log.Error("Error creating category", zap.Error(err))
 				return err
 			}
 
@@ -129,51 +127,45 @@ func (s *blogService) CreateArticleFromURL(ctx context.Context, userID string, p
 				Slug:       slug,
 			}
 		}
-
-		// --- 2. Ensure "external" tag exists ---
-		tag, err := s.tagRepo.GetTagByName(ctx, "external")
+		extractedArticle, err := readability.FromURL(payload.URL, 30*time.Second)
 		if err != nil {
-			logger.Log.Error("Error fetching tag", zap.Error(err))
+			return err
+		}
+		// --- 2. Ensure "external" tag exists ---
+		tag, err := s.tagRepo.GetTagByName(ctx, extractedArticle.SiteName)
+		if err != nil {
 			return err
 		}
 
 		if tag == nil {
-			slug, err := utils.GenerateUniqueSlug(ctx, s.tagRepo, "external")
+			slugg, err := utils.GenerateUniqueSlug(ctx, s.tagRepo, extractedArticle.SiteName)
 			if err != nil {
-				logger.Log.Error("Error generating tag slug", zap.Error(err))
 				return err
 			}
 
 			newTag := &domain.Tag{
-				Name:        "external",
-				Slug:        slug,
+				Name:        extractedArticle.SiteName,
+				Slug:        slugg,
 				CreatedByID: userID,
 			}
 
 			tagID, err := s.tagRepo.CreateTagReturnID(ctx, newTag)
 			if err != nil {
-				logger.Log.Error("Error creating tag", zap.Error(err))
 				return err
 			}
 
 			tag = &domain.Tag{
 				BaseEntity: domain.BaseEntity{ID: tagID},
-				Name:       "external",
-				Slug:       slug,
+				Name:       extractedArticle.SiteName,
+				Slug:       slugg,
 			}
 		}
 
 		// --- 3. Fetch article from URL ---
-		extractedArticle, err := readability.FromURL(payload.URL, 30*time.Second)
-		if err != nil {
-			logger.Log.Error("Readability error", zap.Error(err), zap.String("url", payload.URL))
-			return err
-		}
 
 		// --- 4. Generate unique slug for the article ---
 		uniqueSlug, err := utils.GenerateUniqueSlug(ctx, s.blogRepo, extractedArticle.Title)
 		if err != nil {
-			logger.Log.Error("Error generating article slug", zap.Error(err))
 			return err
 		}
 
@@ -189,28 +181,20 @@ func (s *blogService) CreateArticleFromURL(ctx context.Context, userID string, p
 			Status:      constants.StatusPublished,
 			PublishedAt: time.Now(),
 			Tags:        []*domain.Tag{}, // start empty
+			Source:      payload.URL,
 		}
 
 		// --- 6. Save article ---
 		if err := s.blogRepo.CreateArticlefromURL(ctx, articleDomain); err != nil {
-			logger.Log.Error("Error creating article", zap.Error(err))
 			return err
 		}
 
 		// --- 7. Add "external" tag to article ---
 		if tag != nil && tag.ID != "" {
 			if err := s.blogRepo.AddArticleTags(ctx, articleDomain.ID, []string{tag.ID}); err != nil {
-				logger.Log.Error("Error adding tag to article", zap.Error(err), zap.String("article_id", articleDomain.ID))
 				return err
 			}
 		}
-
-		logger.Log.Info("Article successfully created",
-			zap.String("article_id", articleDomain.ID),
-			zap.String("category", cat.Name),
-			zap.String("tag", tag.Name),
-			zap.String("url", payload.URL),
-		)
 
 		return nil
 	})
@@ -297,8 +281,6 @@ func (s *blogService) GetArticle(ctx context.Context, id string) (response.BlogA
 	if err != nil {
 		return res, err
 	}
-
-	// Increment views asynchronously
 
 	res.FromDomain(&article)
 	return res, nil
@@ -442,4 +424,96 @@ func (s *blogService) GetPublicArticleBySlug(ctx context.Context, slug string) (
 	// Convert to response DTO with related articles
 	res.FromDomain(&article, related)
 	return res, nil
+}
+
+func (s *blogService) GetFeaturedArticle(ctx context.Context) ([]response.PublicArticleList, error) {
+	articles, err := s.blogRepo.GetFeaturedArticle(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	list := make([]response.PublicArticleList, len(articles))
+	for i, article := range articles {
+		var item response.PublicArticleList
+		item.FromDomain(&article)
+		list[i] = item
+	}
+	return list, nil
+}
+
+func (s *blogService) SetFeaturedPosition(ctx context.Context, articleID string, pos int) error {
+	if pos < 1 || pos > 3 {
+		return internal_err.NewDefaultError(http.StatusBadRequest, internal_err.ErrInvalidPosition)
+	}
+
+	article, err := s.blogRepo.GetArticle(ctx, articleID)
+	if err != nil {
+		return err
+	}
+
+	return database.RunInTx(ctx, database.GetDB(), &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+		existingAtPosition, err := s.blogRepo.GetArticleByFeaturedPos(ctx, pos) // tx-aware version
+		if err != nil {
+			return err
+		}
+
+		// If article already has featured pos, maybe just reassign
+		if article.Featured != nil {
+			oldPos := *article.Featured
+			if oldPos == pos {
+				return nil // nothing to do
+			}
+			if err := s.blogRepo.RemoveFeaturedPosition(ctx, articleID); err != nil {
+				return err
+			}
+			if err := s.blogRepo.ShiftUp(ctx, oldPos); err != nil {
+				return err
+			}
+		}
+
+		// If someone already occupies the new pos, shift them down
+		if existingAtPosition != nil && existingAtPosition.Featured != nil {
+			_, err = tx.NewUpdate().
+				Model((*domain.BlogArtikel)(nil)).
+				Set("featured = NULL").
+				Where("featured = ?", pos).
+				Exec(ctx)
+			if err != nil {
+				return err
+			}
+			if err := s.blogRepo.ShiftDown(ctx, pos); err != nil {
+				return err
+			}
+		}
+
+		// Finally set article to new pos
+		return s.blogRepo.SetFeaturedPosition(ctx, articleID, pos)
+	})
+}
+
+func (s *blogService) RemoveFeaturedPosition(ctx context.Context, articleID string) error {
+	article, err := s.blogRepo.GetArticle(ctx, articleID)
+	if err != nil {
+		return err
+	}
+
+	err = database.RunInTx(ctx, database.GetDB(), &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+		if article.Featured == nil {
+			return nil
+		}
+
+		oldPos := *article.Featured
+
+		if err := s.blogRepo.RemoveFeaturedPosition(ctx, articleID); err != nil {
+			return err
+		}
+		err = s.blogRepo.ShiftUp(ctx, oldPos)
+		if err != nil {
+			return err
+		}
+
+		return err
+	})
+	return err
 }

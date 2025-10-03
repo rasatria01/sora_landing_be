@@ -39,6 +39,7 @@ type (
 		Author      *User                   `json:"author,omitempty"`
 		TagCount    int                     `json:"tag_count"`
 		CreatedAt   time.Time               `json:"created_at"`
+		Featured    *int                    `json:"featured"`
 	}
 
 	// BlogArticleStats represents article statistics
@@ -102,6 +103,7 @@ func (b *BlogArticleList) FromDomain(article *domain.BlogArtikel) {
 	b.Views = article.Views
 	b.Status = article.Status
 	b.CreatedAt = article.CreatedAt
+	b.Featured = article.Featured
 
 	if !article.PublishedAt.IsZero() {
 		b.PublishedAt = &article.PublishedAt
