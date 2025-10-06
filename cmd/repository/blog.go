@@ -298,7 +298,8 @@ func (r *blogRepository) ListPublicArticles(ctx context.Context, req requests.Li
 		Model(&res).
 		Relation("Category").
 		Relation("Author").
-		Relation("Tags")
+		Relation("Tags").
+		Where("ba.featured IS NULL")
 
 	// Apply filters
 	if req.CategoryID != "" {
