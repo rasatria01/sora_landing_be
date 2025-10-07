@@ -157,7 +157,11 @@ func (r *blogRepository) ListArticles(ctx context.Context, req requests.ListArti
 		Relation("Category").
 		Relation("Author").
 		Relation("Tags").
-		Where("ba.featured IS NULL")
+		OrderExpr(`
+		CASE WHEN ba.featured IS NULL THEN 1 ELSE 0 END ASC,
+		ba.featured ASC,
+		ba.created_at DESC
+		`)
 
 	// Apply filters
 	if req.CategoryID != "" {
