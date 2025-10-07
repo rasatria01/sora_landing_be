@@ -38,7 +38,6 @@ func RegisterV1(router *gin.Engine) {
 		registerTag(v1)
 		registerDemo(v1)
 		registerCategory(v1)
-		RegisterFileRoutes(v1)
 		registerUser(v1)
 		registerBlog(v1)
 

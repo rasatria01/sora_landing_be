@@ -1,13 +1,14 @@
 package main
 
 import (
-	"log"
 	"sora_landing_be/cmd/routes"
 	"sora_landing_be/pkg/authentication"
 	"sora_landing_be/pkg/config"
 	"sora_landing_be/pkg/database"
 	"sora_landing_be/pkg/http/server"
 	"sora_landing_be/pkg/logger"
+
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -27,11 +28,17 @@ func main() {
 
 	authentication.SetupKey(cfg.Authentication.EncryptKey)
 
-	server.Init(cfg.Application, routes.RegisterV1).GracefulShutdown()
-	defer func() {
-		err := logger.Log.Sync()
-		if err != nil {
-			log.Println(err)
-		}
+	// Initialize the server
+	srv := server.Init(cfg.Application, routes.RegisterV1)
+
+	// Start listening for shutdown signals in a separate goroutine
+	go func() {
+		srv.GracefulShutdown()
 	}()
+
+	// Log that we're starting
+	logger.Log.Info("Server is running", zap.Int("port", cfg.Application.Port))
+
+	// Keep the main goroutine running
+	select {}
 }

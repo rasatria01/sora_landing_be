@@ -35,8 +35,6 @@ func main() {
 		err = seeders.SeedTags(ctx)
 	case "blogs":
 		err = seeders.SeedBlogArtikels(ctx)
-	case "files":
-		err = seeders.SeedFileUploads(ctx)
 	case "":
 		err = seeders.RunSeeder(ctx)
 	default:
