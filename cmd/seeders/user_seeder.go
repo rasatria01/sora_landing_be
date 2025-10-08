@@ -12,41 +12,55 @@ import (
 func SeedUsers(ctx context.Context) error {
 	db := database.GetDB()
 
-	// Create 10 users with authentication
-	for i := 1; i <= 10; i++ {
+	// Check if superadmin exists
+	exists, err := db.NewSelect().Model((*domain.User)(nil)).
+		Where("roles @> ?", "{SuperAdmin}").
+		Exists(ctx)
+	if err != nil {
+		return fmt.Errorf("error checking superadmin: %v", err)
+	}
 
-		// Create password hash
-		hashedPassword, err := authentication.HashPassword(fmt.Sprintf("password%d", i))
-		if err != nil {
-			return err
-		}
+	if exists {
+		fmt.Println("✓ Superadmin already exists")
+		return nil
+	}
 
-		user := &domain.User{
-			Name:   fmt.Sprintf("User %d", i),
-			Email:  fmt.Sprintf("user%d@example.com", i),
-			Status: "Active",
-			Roles:  []constants.UserRole{constants.UserRoleUser},
-		}
+	// Create superadmin
+	hashedPassword, err := authentication.HashPassword("admin123") // You might want to change this password
+	if err != nil {
+		return err
+	}
 
-		// First user is admin
-		if i == 1 {
-			user.Name = "Admin User"
-			user.Email = "admin@example.com"
-			user.Roles = []constants.UserRole{constants.UserRoleAdmin}
-		}
+	user := &domain.User{
+		Name:   "Admin User",
+		Email:  "admin@example.com",
+		Status: "Active",
+		Roles:  []constants.UserRole{constants.UserRoleSuperAdmin},
+	}
 
-		auth := &domain.Authentication{
-			UserID:   user.ID,
-			Password: hashedPassword,
-		}
+	// Insert user first
+	if _, err := db.NewInsert().Model(user).Exec(ctx); err != nil {
+		return fmt.Errorf("failed to create user: %v", err)
+	}
 
-		if _, err := db.NewInsert().Model(user).Exec(ctx); err != nil {
-			return err
-		}
+	// Create authentication record
+	auth := &domain.Authentication{
+		UserID:   user.ID,
+		Password: hashedPassword,
+	}
 
-		if _, err := db.NewInsert().Model(auth).Exec(ctx); err != nil {
-			return err
-		}
+	// Insert authentication
+	if _, err := db.NewInsert().Model(auth).Exec(ctx); err != nil {
+		return fmt.Errorf("failed to create authentication: %v", err)
+	}
+
+	// Verify the user was created properly
+	var auth2 domain.Authentication
+	err = db.NewSelect().Model(&auth2).
+		Where("user_id = ?", user.ID).
+		Scan(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to verify authentication creation: %v", err)
 	}
 
 	fmt.Println("✓ Users seeded")

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"sora_landing_be/cmd/domain"
 	"sora_landing_be/pkg/config"
 	"sora_landing_be/pkg/logger"
@@ -28,8 +29,12 @@ const (
 
 func InitDB(c config.Database) {
 	once.Do(func() {
-		dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
-			c.User, c.Password, c.Host, c.Port, c.Name, c.SSLMode)
+		// Use DATABASE_URL if set, otherwise build from config
+		dsn := os.Getenv("DATABASE_URL")
+		if dsn == "" {
+			dsn = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
+				c.User, c.Password, c.Host, c.Port, c.Name, c.SSLMode)
+		}
 
 		sqlDB, err := sql.Open("postgres", dsn)
 		if err != nil {

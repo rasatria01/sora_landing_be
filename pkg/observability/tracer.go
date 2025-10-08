@@ -3,6 +3,7 @@ package observability
 import (
 	"context"
 	"time"
+
 	"github.com/segmentio/ksuid"
 )
 

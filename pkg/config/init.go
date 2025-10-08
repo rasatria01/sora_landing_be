@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -34,10 +36,12 @@ func LoadConfig() Config {
 		viper.SetConfigType("yaml")
 		viper.AddConfigPath(configPath)
 
-		// Automatically override with env variables if available
+		// Set up environment variable bindings
+		viper.SetEnvPrefix("")
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 		viper.AutomaticEnv()
 
-		// Read config
+		// Read config file
 		if err = viper.ReadInConfig(); err != nil {
 			var configFileNotFoundError viper.ConfigFileNotFoundError
 			if errors.As(err, &configFileNotFoundError) {
@@ -46,6 +50,14 @@ func LoadConfig() Config {
 			}
 			err = fmt.Errorf("error reading config file: %w", err)
 			return
+		}
+
+		// Check for PORT environment variable specifically
+		if port := os.Getenv("PORT"); port != "" {
+			portNum, err := strconv.Atoi(port)
+			if err == nil {
+				viper.Set("application.port", portNum)
+			}
 		}
 
 		// Unmarshal into struct

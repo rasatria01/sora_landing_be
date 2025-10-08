@@ -20,8 +20,7 @@ func RunSeeder(ctx context.Context) error {
 			SeedUsers,        // First, as other tables reference users
 			SeedCategories,   // Second, as blogs need categories
 			SeedTags,         // Third, as blogs need tags
-			SeedBlogArtikels, // Fourth, depends on users, categories, and tags
-			SeedFileUploads,  // Last, depends on users
+			SeedBlogArtikels, // Fourth, depends on users, categories, and tags// Last, depends on users
 		}
 
 		for _, seeder := range seeders {

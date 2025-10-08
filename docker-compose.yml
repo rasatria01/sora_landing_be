@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # Database Configuration
+      - database.host=db
+      - database.port=5432
+      - database.user=${DB_USER:-postgres}
+      - database.password=${DB_PASSWORD:-postgres}
+      - database.name=${DB_NAME:-sora_landing}
+      - database.ssl_mode=disable
+      - database.max_open_idle_conn=10
+      - database.max_open_conn=30
+      - database.max_idle_conn=5m
+      # For migrations
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-sora_landing}?sslmode=disable
+      
+      # Application Configuration
+      - CONFIG_PATH=/app/config
+      - application.port=8080
+      - application.environment=${APP_ENV:-development}
+      
+      # Authentication Configuration
+      - authentication.encrypt_key=${AUTH_ENCRYPT_KEY}
+      - authentication.access_secret_key=${AUTH_ACCESS_SECRET}
+      - authentication.refresh_secret_key=${AUTH_REFRESH_SECRET}
+      - authentication.access_token_expiry=1h
+      - authentication.refresh_token_expiry=72h
+      - authentication.issuer=sora-landing
+      
+      # Logger Configuration
+      - logger.environment=${APP_ENV:-development}
+      - logger.log_level=${LOG_LEVEL:-debug}
+      - logger.encoding=json
+      
+      # Object Storage Configuration (if needed)
+      - object_storage.bucket=${STORAGE_BUCKET:-}
+      - object_storage.endpoint=${STORAGE_ENDPOINT:-}
+      - object_storage.access_key=${STORAGE_ACCESS_KEY:-}
+      - object_storage.secret_key=${STORAGE_SECRET_KEY:-}
+      - object_storage.max_file_size=10
+      - object_storage.use_ssl=false
+      - object_storage.presign_expiration=5h
+    depends_on:
+      - db
+    volumes:
+      - ./uploads:/app/uploads  # For file uploads
+    networks:
+      - sora-network
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-sora_landing}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - sora-network
+
+  # You can add your frontend service here
+  # frontend:
+  #   build:
+  #     context: ../frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - sora-network
+
+networks:
+  sora-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
