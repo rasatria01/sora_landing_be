@@ -40,6 +40,7 @@ func RegisterV1(router *gin.Engine) {
 		registerCategory(v1)
 		registerUser(v1)
 		registerBlog(v1)
+		RegisterFileRoutes(v1)
 
 	}
 
