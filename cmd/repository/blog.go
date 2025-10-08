@@ -163,7 +163,6 @@ func (r *blogRepository) ListArticles(ctx context.Context, req requests.ListArti
 		ba.created_at DESC
 		`)
 
-
 	// Apply filters
 	if req.CategoryID != "" {
 		q.Where("category_id = ?", req.CategoryID)
@@ -304,7 +303,8 @@ func (r *blogRepository) ListPublicArticles(ctx context.Context, req requests.Li
 		Relation("Category").
 		Relation("Author").
 		Relation("Tags").
-		Where("ba.featured IS NULL")
+		Where("ba.featured IS NULL").
+		Where("ba.status = ? ", constants.StatusPublished)
 
 	// Apply filters
 	if req.CategoryID != "" {
