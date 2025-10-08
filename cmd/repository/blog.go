@@ -163,6 +163,7 @@ func (r *blogRepository) ListArticles(ctx context.Context, req requests.ListArti
 		ba.created_at DESC
 		`)
 
+
 	// Apply filters
 	if req.CategoryID != "" {
 		q.Where("category_id = ?", req.CategoryID)
