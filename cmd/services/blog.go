@@ -257,20 +257,32 @@ func (s *blogService) UpdateArticle(ctx context.Context, id string, payload requ
 
 func (s *blogService) UpdateArticleStatus(ctx context.Context, id string, payload requests.UpdateArticleStatus) error {
 	// Get existing article
-	_, err := s.blogRepo.GetArticle(ctx, id)
+	article, err := s.blogRepo.GetArticle(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	var publishAt *time.Time
-	switch payload.Status {
-	case constants.StatusPublished:
-		now := time.Now()
-		publishAt = &now
-	case constants.StatusScheduled:
-		publishAt = payload.PublishAt
+	// Prevent reverting to draft if already published or archived
+	if (article.Status == constants.StatusPublished || article.Status == constants.StatusArchived) &&
+		payload.Status == constants.StatusDraft {
+		return internal_err.NewDefaultError(http.StatusBadRequest, "cannot change published or archived article back to draft")
 	}
 
+	var publishAt *time.Time
+
+	// If transitioning from draft → published, set PublishedAt
+	if article.Status == constants.StatusDraft && payload.Status == constants.StatusPublished {
+		now := time.Now()
+		publishAt = &now
+	} else if payload.Status == constants.StatusScheduled {
+		// For scheduled, use provided publish time
+		publishAt = payload.PublishAt
+	} else {
+		// Keep the current PublishedAt if not publishing or scheduling
+		publishAt = &article.PublishedAt
+	}
+
+	// Update status and possibly publishAt
 	return s.blogRepo.UpdateArticleStatus(ctx, id, payload.Status, publishAt)
 }
 
