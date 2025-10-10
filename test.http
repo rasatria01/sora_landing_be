@@ -1,0 +1,5 @@
+curl -L \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoX2lkIjoiMzNYdGNoVm1ZTTJuMnd4M1FrTWZyQ2JaNkVrIiwidXNlcl9pZCI6IjMzWHRjakdodUpPSjVOSVhranZZYzY3bXF5ciIsImVtYWlsIjoic3R0QG1haWwuY29tIiwicm9sZSI6WyJTdXBlckFkbWluIl0sImlzcyI6InN5c3RlbS1uYW1lIiwic3ViIjoic3R0QG1haWwuY29tIiwiZXhwIjoxNzU5OTk4ODQzLCJuYmYiOjE3NTk5OTUyNDMsImlhdCI6MTc1OTk5NTI0M30.kdAzYibADJtdq0F9Sy0wFcVbIQmiqQIhhVzgwu4RJ48" \
+  -H "Accept: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" \
+  -o demo_export.xlsx \
+  http://localhost:3000/api/v1/demo/export

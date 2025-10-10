@@ -15,6 +15,7 @@ type (
 		Waktu   string    `json:"waktu"`
 		Tanggal time.Time `json:"tanggal"`
 	}
+	
 )
 
 func NewListDemo(demos []domain.DemoEntry) []Demo {

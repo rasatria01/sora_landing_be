@@ -3,7 +3,7 @@ CREATE TABLE categories (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMP WITH TIME ZONE,
-    name VARCHAR NOT NULL UNIQUE,
+    name VARCHAR NOT NULL ,
     slug VARCHAR NOT NULL UNIQUE,
     created_by_id VARCHAR(27) ,
     edited_by_id VARCHAR(27) NULL,

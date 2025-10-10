@@ -6,7 +6,7 @@ CREATE TABLE tags (
     created_by_id VARCHAR(27) ,
     edited_by_id VARCHAR(27) NULL,
 
-    name VARCHAR NOT NULL UNIQUE,
+    name VARCHAR NOT NULL ,
     slug VARCHAR NOT NULL UNIQUE,
 
     FOREIGN KEY (created_by_id) REFERENCES users(id),

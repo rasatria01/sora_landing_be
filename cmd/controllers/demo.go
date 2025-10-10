@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"sora_landing_be/cmd/dto/requests"
 	"sora_landing_be/cmd/services"
@@ -102,4 +103,34 @@ func (ctl *DemoController) Get(ctx *gin.Context) {
 	}
 
 	http_response.SendSuccess(ctx, http.StatusOK, "Success get data", res)
+}
+
+func (ctl *DemoController) Export(ctx *gin.Context) {
+	var payload requests.ExportDemo
+	if err := internalHTTP.BindData(ctx, &payload); err != nil {
+		http_response.SendError(ctx, errors.ValidationErrorToAppError(err))
+	}
+
+	file, err := ctl.demoServices.ExportDemo(ctx, payload)
+	if err != nil {
+		http_response.SendError(ctx, err)
+		return
+	}
+	buf, err := file.WriteToBuffer()
+	if err != nil {
+		http_response.SendError(ctx, err)
+
+		return
+	}
+	defer file.Close()
+
+	ctx.Header("Content-Disposition", "attachment; filename=export-demo.xlsx")
+	ctx.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	ctx.Header("Content-Transfer-Encoding", "binary")
+	ctx.Header("Content-Length", fmt.Sprintf("%d", buf.Len()))
+	if err := file.Write(ctx.Writer); err != nil {
+		http_response.SendError(ctx, errors.StorageErrorToAppError("failed to write file"))
+		return
+	}
+	ctx.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buf.Bytes())
 }

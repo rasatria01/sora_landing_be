@@ -17,7 +17,8 @@ create table public.authentications
     id               varchar(27)                                        not null
         primary key,
     user_id          varchar(27)
-        references public.users,
+        references public.users
+        ON DELETE CASCADE,
     password         text                                               not null,
     refresh_token_id varchar(27),
     created_at       timestamp with time zone default CURRENT_TIMESTAMP not null,

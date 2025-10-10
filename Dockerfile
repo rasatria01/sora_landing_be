@@ -1,4 +1,4 @@
-# =========================
+    # =========================
 # 1. Build Stage
 # =========================
 FROM golang:1.24-alpine AS builder
@@ -56,7 +56,8 @@ COPY --from=builder /app/migrations/ /app/migrations/
 COPY --chown=appuser:appuser docker-entrypoint.sh /app/
 
 # Ensure correct permissions
-RUN chown -R appuser:appuser /app/uploads
+RUN chown -R appuser:appuser /app/uploads && \
+    chmod -R 755 /app/uploads
 
 # Set permissions
 RUN chmod +x /app/docker-entrypoint.sh /app/server /app/seed && \

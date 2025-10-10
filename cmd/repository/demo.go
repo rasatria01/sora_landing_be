@@ -15,6 +15,7 @@ type DemoRepository interface {
 	ListDemos(ctx context.Context, req requests.ListDemo) ([]domain.DemoEntry, int, error)
 	UpdateDemo(ctx context.Context, entry *domain.DemoEntry) error
 	DeleteDemo(ctx context.Context, id string) error
+	ExportDemo(ctx context.Context, req requests.ExportDemo) ([]domain.DemoEntry, error)
 }
 
 type demoRepository struct {
@@ -80,4 +81,19 @@ func (r *demoRepository) DeleteDemo(ctx context.Context, id string) error {
 		Where("id = ?", id).
 		Exec(ctx)
 	return err
+}
+
+func (r *demoRepository) ExportDemo(ctx context.Context, req requests.ExportDemo) ([]domain.DemoEntry, error) {
+	var entries []domain.DemoEntry
+	q := r.db.InitQuery(ctx).
+		NewSelect().
+		Model(&entries)
+	if req.StartDate != nil {
+		q.Where("created_at >= ?", req.StartDate)
+	}
+	if req.EndDate != nil {
+		q.Where("created_at <= ?", req.EndDate)
+	}
+	err := q.Scan(ctx)
+	return entries, err
 }

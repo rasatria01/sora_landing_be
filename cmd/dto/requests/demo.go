@@ -20,6 +20,11 @@ type ListDemo struct {
 	Search string `form:"search,omitempty"`
 }
 
+type ExportDemo struct {
+	StartDate *time.Time `form:"start_date,omitempty"`
+	EndDate   *time.Time `form:"end_date,omitempty"`
+}
+
 func (r *Demo) ToDomain() domain.DemoEntry {
 
 	return domain.DemoEntry{

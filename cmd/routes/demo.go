@@ -17,5 +17,6 @@ func registerDemo(router *gin.RouterGroup) {
 		tag.GET(":id", userCtl.Get)
 		tag.PUT(":id", userCtl.Update)
 		tag.DELETE(":id", userCtl.Delete)
+		tag.GET("export", userCtl.Export)
 	}
 }

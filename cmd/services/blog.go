@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"os"
 
 	"net/http"
 	"sora_landing_be/cmd/constants"
@@ -221,6 +222,9 @@ func (s *blogService) UpdateArticle(ctx context.Context, id string, payload requ
 			}
 		} else {
 			uniqueSlug = existing.Slug
+		}
+		if existing.ImageURL != *payload.ImageURL && *payload.ImageURL != "" {
+			os.Remove("./uploads/" + existing.ImageURL)
 		}
 
 		// Update article
